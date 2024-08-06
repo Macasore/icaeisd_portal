@@ -1,6 +1,7 @@
 from app import db
 from flask_login import UserMixin
 import enum
+from sqlalchemy.sql import func
 
 class Role(enum.Enum):
     AUTHOR = 'author'
@@ -17,3 +18,5 @@ class User(UserMixin, db.Model):
     is_paid = db.Column(db.Boolean, nullable=False)
     password = db.Column(db.String(128), nullable=False)
     role = db.Column(db.Enum(Role), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True),
+                           server_default=func.now())
