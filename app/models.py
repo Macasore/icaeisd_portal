@@ -10,7 +10,9 @@ class Role(enum.Enum):
     ATTENDEE = 'attendee'
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = "users"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(128), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     first_name = db.Column(db.String(255), nullable=False)
@@ -22,4 +24,28 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime(timezone=True),
                            server_default=func.now())
     
+class Paper(db.Model):
+    __tablename__ = "papers"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(200), nullable=False)
+    theme = db.Column(db.String(200), nullable=False)
+    subtheme = db.Column(db.String(200), nullable=False)
+    abstract = db.Column(db.String(350), nullable=True)
+    file_path = db.Column(db.String(255), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
+    author = db.relationship('User', backref='papers')
+    
+    co_authors = db.relationship('CoAuthor', backref='paper', lazy=True, cascade="all, delete-orphan")
+    
+class CoAuthor(db.Model):
+    __tablename__ = 'co_authors'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    full_name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+
+    paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=False)
+
+    def __repr__(self):
+        return f"<CoAuthor(full_name={self.full_name}, email={self.email})>"

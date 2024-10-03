@@ -22,7 +22,7 @@ def register():
     if not email or not first_name or not last_name or not phone_number:
         return jsonify({"msg": "All fields are required"}), 400
     
-    if role not in Role._value2member_map_:
+    if role not in Role.__members__:
         return jsonify({"msg": "Invalid role"}), 400
     
     emailCheck = User.query.filter_by(email=email).first()
