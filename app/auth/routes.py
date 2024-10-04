@@ -1,7 +1,7 @@
 from app.models import User, Role
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.helper import generatePassword, sendDetailsToEmail
+from app.auth.helper import generatePassword, sendDetailsToEmail
 from app import db, jwt, blacklist
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 

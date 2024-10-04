@@ -34,7 +34,7 @@ class Paper(db.Model):
     abstract = db.Column(db.String(350), nullable=True)
     file_path = db.Column(db.String(255), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
     author = db.relationship('User', backref='papers')
     
     co_authors = db.relationship('CoAuthor', backref='paper', lazy=True, cascade="all, delete-orphan")
