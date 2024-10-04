@@ -18,7 +18,8 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
-    is_paid = db.Column(db.Boolean, nullable=False)
+    is_paid = db.Column(db.Boolean, default=False)
+    logged_in = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.Enum(Role), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True),

@@ -1,9 +1,10 @@
-from app.models import User
+from app.models import User, Role
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.helper import generatePassword, sendDetailsToEmail
-from app import db
-from app.models import Role
+from app import db, jwt, blacklist
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+
 
 
 auth_bp = Blueprint('auth',__name__ )
@@ -22,7 +23,7 @@ def register():
     if not email or not first_name or not last_name or not phone_number:
         return jsonify({"msg": "All fields are required"}), 400
     
-    if role not in Role.__members__:
+    if role not in Role._value2member_map_:
         return jsonify({"msg": "Invalid role"}), 400
     
     emailCheck = User.query.filter_by(email=email).first()
@@ -30,7 +31,7 @@ def register():
         return jsonify({"msg": "Email already exists"}), 400
     
     user = User(email=email, first_name=first_name, last_name=last_name, phone_number=phone_number, username=username,
-                password=generate_password_hash(password), is_paid=False, role=Role(role))
+                password=generate_password_hash(password), role=Role(role))
     print(user.role)
     db.session.add(user)
     db.session.commit()
@@ -40,3 +41,39 @@ def register():
     return jsonify({"msg": "Registration successful"}), 200
     
     
+@auth_bp.route("/login", methods=['POST'])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    
+    user = User.query.filter_by(username=username).first_or_404()
+    
+    if user and check_password_hash(user.password, password):
+        user.logged_in = True
+        db.session.commit() 
+        
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+        
+        return jsonify({
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }), 200
+        
+    return jsonify({"msg": "Invalid username or password"}), 401
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True) 
+def refresh():
+    current_user = get_jwt_identity() 
+    new_access_token = create_access_token(identity=current_user)
+    return jsonify({"access_token": new_access_token}), 200
+
+@auth_bp.route("/logout", methods=['DELETE'])
+@jwt_required()
+def logout():
+    jti = get_jwt()["jti"]
+    blacklist.add(jti)
+    return jsonify({"msg": "Successfully logged out"}), 200
