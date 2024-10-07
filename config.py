@@ -14,6 +14,6 @@ class Config:
     MAIL_USE_TLS = os.getenv('MAIL_USE_TLS') == 'True'
     MAIL_USE_SSL = os.getenv('MAIL_USE_SSL') == 'True'
     MAIL_DEFAULT_SENDER = os.getenv('DefaultFromMail')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=1)
     UPLOAD_FOLDER = os.getenv("folder")

@@ -1,10 +1,11 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from config import Config
 from flask_mail import Mail
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 db = SQLAlchemy()
 login = LoginManager()
@@ -18,6 +19,8 @@ blacklist = set()
 def check_if_token_in_blacklist(jwt_header, jwt_payload):
     jti = jwt_payload['jti']
     return jti in blacklist
+
+
 
 def create_app():
     app = Flask(__name__)
@@ -41,5 +44,8 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(author_bp, url_prefix='/author')
     
+    @app.errorhandler(NoAuthorizationError)
+    def handle_missing_token_error(e):
+        return jsonify({"msg": "Token is missing! Please provide a valid token."}), 401
     
     return app

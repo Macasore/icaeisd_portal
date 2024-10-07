@@ -3,13 +3,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, Role, CoAuthor, Paper
 from .helpers import check_paper_limits
 from werkzeug.utils import secure_filename
-import os
+import os, json
 from app import db
 
 author_bp = Blueprint('author',__name__ )
 
 @author_bp.route("/submit-paper", methods=["POST"])
-@jwt_required
+@jwt_required()
 def submitPaper():
     current_user = get_jwt_identity() 
     current_user_email = User.query.filter_by(id=current_user).first().email
@@ -25,19 +25,24 @@ def submitPaper():
     can_submit, message = check_paper_limits(current_user_email)
     
     if not can_submit:
+        return jsonify({"msg": f"author {current_user_email} cannoxt be added: {message}"}), 400
+    
+    if not can_submit:
         return jsonify({"msg": message}), 403
     
-    data = request.json
+    json_data = request.form.get('data')
+    data = json.loads(json_data)
+    print(data)
     title = data.get("title")
     theme = data.get("theme")
     subtheme = data.get("subtheme")
     abstract = data.get("abstract")
-    coauthors = data.getlist("coauthors")
+    coauthors = data.get("coauthors", []) 
     
     if 'file' not in request.files:
         return jsonify({"msg": "No file part in the request"}), 400
     
-    file = request.files['file']
+    file = request.files.get('file')
     
     if file.filename == '':
         return jsonify({"msg": "No selected file"}), 400

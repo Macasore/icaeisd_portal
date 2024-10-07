@@ -48,7 +48,8 @@ def login():
     password = data.get("password")
 
     
-    user = User.query.filter_by(username=username).first_or_404()
+    user = User.query.filter_by(username=username).first()
+    
     
     if user and check_password_hash(user.password, password):
         user.logged_in = True

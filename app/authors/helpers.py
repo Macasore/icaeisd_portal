@@ -1,14 +1,13 @@
-from app.models import Paper, CoAuthor
+from app.models import Paper, CoAuthor,User
+from sqlalchemy.orm import aliased
 
 def check_paper_limits(email):
-    authored_papers_count = Paper.query.filter_by(author_email=email).count()
-    print(authored_papers_count)
+    Useralias = aliased(User)
+    authored_papers_count = Paper.query.join(Useralias, Paper.author_id == Useralias.id).filter(Useralias.email == email).count()
     
     coauthored_papers_count = CoAuthor.query.filter_by(email=email).count()
-    print(coauthored_papers_count)
     
     total_papers_count = authored_papers_count + coauthored_papers_count
-    print(total_papers_count)
     
     max_papers_allowed = 2
     
