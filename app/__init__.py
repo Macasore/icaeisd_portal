@@ -6,6 +6,8 @@ from config import Config
 from flask_mail import Mail
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_swagger_ui import get_swaggerui_blueprint
+from flask_cors import CORS
 
 db = SQLAlchemy()
 login = LoginManager()
@@ -26,11 +28,24 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
+    SWAGGER_URL = '/swagger'
+    API_URL = '/static/swagger.json'
+    
+    swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,  
+    API_URL,
+    config={ 
+        'app_name': "My Flask API"
+    }
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+    
     db.init_app(app)
     login.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
     jwt.init_app(app)
+    CORS(app)
     
     
     from app.models import User

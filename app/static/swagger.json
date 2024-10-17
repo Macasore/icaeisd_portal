@@ -1,0 +1,181 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "Flask API",
+      "description": "API documentation for user registration, authentication, email sending, and paper submission"
+    },
+    "host": "localhost:5000",
+    "basePath": "/",
+    "schemes": ["http"],
+    "paths": {
+      "/auth/register": {
+        "post": {
+          "summary": "Register a new user",
+          "description": "Creates a new user in the system",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "User data",
+              "required": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "first_name": { "type": "string" },
+                  "last_name": { "type": "string" },
+                  "phone_number": { "type": "string" },
+                  "role": { "type": "string" }
+                },
+                "required": ["email", "first_name", "last_name", "phone_number", "role"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Registration successful"
+            },
+            "400": {
+              "description": "Invalid input or email already exists"
+            }
+          }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "summary": "User login",
+          "description": "Login a user and return access/refresh tokens",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "Login credentials",
+              "required": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "access_token": { "type": "string" },
+                  "refresh_token": { "type": "string" }
+                }
+              }
+            },
+            "401": {
+              "description": "Invalid username or password"
+            }
+          }
+        }
+      },
+      "/auth/refresh": {
+        "post": {
+          "summary": "Refresh access token",
+          "description": "Get a new access token using a refresh token",
+          "responses": {
+            "200": {
+              "description": "Access token refreshed"
+            },
+            "401": {
+              "description": "Unauthorized, invalid refresh token"
+            }
+          }
+        }
+      },
+      "/auth/logout": {
+        "delete": {
+          "summary": "Logout a user",
+          "description": "Logs out the user and adds the JWT to the blacklist",
+          "responses": {
+            "200": {
+              "description": "Logout successful"
+            }
+          }
+        }
+      },
+      "/auth/send-email": {
+        "get": {
+          "summary": "Send a test email",
+          "description": "Sends a test email using Flask-Mail",
+          "responses": {
+            "200": {
+              "description": "Email sent successfully"
+            },
+            "500": {
+              "description": "Failed to send email"
+            }
+          }
+        }
+      },
+      "/author/submit-paper": {
+      "post": {
+    "summary": "Submit a paper",
+    "description": "Submit a paper with a PDF file and co-authors",
+    "consumes": ["multipart/form-data"],
+    "parameters": [
+      {
+        "in": "formData",
+        "name": "title",
+        "description": "The title of the paper",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "in": "formData",
+        "name": "theme",
+        "description": "The theme of the paper",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "in": "formData",
+        "name": "subtheme",
+        "description": "The subtheme of the paper",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "in": "formData",
+        "name": "abstract",
+        "description": "An abstract of the paper",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "in": "formData",
+        "name": "coauthors",
+        "description": "List of coauthors in JSON format",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "in": "formData",
+        "name": "file",
+        "description": "PDF file to upload",
+        "required": true,
+        "type": "file"
+      }
+    ],
+    "responses": {
+      "201": {
+        "description": "Paper submitted successfully"
+      },
+      "400": {
+        "description": "Invalid input or file errors"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,7 @@
 from app.models import User, Role
 from flask import Blueprint, request, jsonify
+from flask_mail import Message
+from app import mail
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.auth.helper import generatePassword, sendDetailsToEmail
 from app import db, jwt, blacklist
@@ -78,3 +80,14 @@ def logout():
     jti = get_jwt()["jti"]
     blacklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
+
+@auth_bp.route('/send-email')
+def send_email():
+    try:
+        msg = Message("Test Email", 
+                      recipients=["david@nucleus.com.ng"])  
+        msg.body = "This is a test email sent from Flask-Mail."
+        mail.send(msg)
+        return "Email sent!"
+    except Exception as e:
+        return str(e)

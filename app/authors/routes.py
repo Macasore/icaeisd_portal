@@ -30,14 +30,11 @@ def submitPaper():
     if not can_submit:
         return jsonify({"msg": message}), 403
     
-    json_data = request.form.get('data')
-    data = json.loads(json_data)
-    print(data)
-    title = data.get("title")
-    theme = data.get("theme")
-    subtheme = data.get("subtheme")
-    abstract = data.get("abstract")
-    coauthors = data.get("coauthors", []) 
+    title = request.form.get("title")
+    theme = request.form.get("theme")
+    subtheme = request.form.get("subtheme")
+    abstract = request.form.get("abstract")
+    coauthors = request.form.get("coauthors", []) 
     
     if 'file' not in request.files:
         return jsonify({"msg": "No file part in the request"}), 400
