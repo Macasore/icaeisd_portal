@@ -38,8 +38,8 @@ def register():
     db.session.add(user)
     db.session.commit()
     if user.role != Role.ATTENDEE:
-        sendDetailsToEmail(username, password, email)
-        return jsonify({"msg": "Please check your email for login details"}), 200
+        # sendDetailsToEmail(username, password, email)
+        return jsonify({"msg": f"Please check your email for login details, username:{username}, password:{password}"}), 200
     return jsonify({"msg": "Registration successful"}), 200
     
     
@@ -62,7 +62,8 @@ def login():
         
         return jsonify({
             "access_token": access_token,
-            "refresh_token": refresh_token
+            "refresh_token": refresh_token,
+            "username": username
         }), 200
         
     return jsonify({"msg": "Invalid username or password"}), 401
@@ -91,3 +92,21 @@ def send_email():
         return "Email sent!"
     except Exception as e:
         return str(e)
+
+@auth_bp.route("/user-details", methods=["GET"])
+@jwt_required()
+def user_details():
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if user:
+        return jsonify({
+            "email" : user.email,
+            "first_name" : user.first_name,
+            "last_name" : user.last_name,
+            "phone_number" : user.phone_number
+        }, 200)
+    
+    return jsonify({"msg": "User doesn't exist"}, 404)
+    
+    

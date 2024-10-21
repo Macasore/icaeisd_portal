@@ -5,7 +5,6 @@
       "title": "Flask API",
       "description": "API documentation for user registration, authentication, email sending, and paper submission"
     },
-    "host": "localhost:5000",
     "basePath": "/",
     "schemes": ["http"],
     "paths": {
@@ -176,6 +175,28 @@
           }
         }
       }
-    }
+    },"/auth/user-details": {
+        "get": {
+          "summary": "Get user's details",
+          "description": "Gets the details of a user connected to the access token",
+          "responses": {
+            "200": {
+              "description": "User details",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "first_name": { "type": "string" },
+                  "last_name": { "type": "string" },
+                  "phone_number": { "type": "string" }
+                }
+              }
+            },
+            "404": {
+              "description": "User doesn't exist"
+            }
+          }
+        }
+      }
   }
 }
