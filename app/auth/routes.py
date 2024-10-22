@@ -20,7 +20,7 @@ def register():
     phone_number = data.get('phone_number')
     role = data.get('role')
     password = generatePassword()
-    username = first_name
+    username = email
     
     if not email or not first_name or not last_name or not phone_number:
         return jsonify({"msg": "All fields are required"}), 400
@@ -31,6 +31,7 @@ def register():
     emailCheck = User.query.filter_by(email=email).first()
     if emailCheck:
         return jsonify({"msg": "Email already exists"}), 400
+    
     
     user = User(email=email, first_name=first_name, last_name=last_name, phone_number=phone_number, username=username,
                 password=generate_password_hash(password), role=Role(role))
@@ -62,8 +63,7 @@ def login():
         
         return jsonify({
             "access_token": access_token,
-            "refresh_token": refresh_token,
-            "username": username
+            "refresh_token": refresh_token
         }), 200
         
     return jsonify({"msg": "Invalid username or password"}), 401
