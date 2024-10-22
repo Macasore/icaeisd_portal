@@ -79,6 +79,14 @@ def refresh():
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+    if not user:
+        return jsonify({"msg": "Invalid user"}, 400)
+    
+    user.logged_in = False
+    db.session.commit() 
+    
     blacklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 
