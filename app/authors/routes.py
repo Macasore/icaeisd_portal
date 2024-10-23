@@ -20,7 +20,7 @@ def submitPaper():
         return jsonify({"msg": "User not found"}), 404
     
     if author.role != Role.AUTHOR:
-        return jsonify({"msg": "Unauthorized for this operation"}, 400)
+        return jsonify({"msg": "Unauthorized for this operation"}), 403
     
     can_submit, message = check_paper_limits(current_user_email)
     
@@ -62,16 +62,21 @@ def submitPaper():
         file_path=file_path,
         author_id=author.id
     )
+    if coauthors:
+        try:
+            coauthors = json.loads(coauthors) 
+        except json.JSONDecodeError:
+            return jsonify({"msg": "Invalid coauthor data format"}), 400
     
     for coauthor_data in coauthors:
-        coauthor_email = coauthor_data['email']
+        coauthor_email = coauthor_data.get('email')  # Safely access 'email'
         
         can_submit_coauthor, message = check_paper_limits(coauthor_email)
         
         if not can_submit_coauthor:
             return jsonify({"msg": f"Coauthor {coauthor_email} cannot be added: {message}"}), 400
-    
-        coauthor = CoAuthor(full_name=coauthor_data['name'], email=coauthor_email, paper=paper)
+        
+        coauthor = CoAuthor(full_name=coauthor_data.get('name'), email=coauthor_email, paper=paper)
         db.session.add(coauthor)
         
     db.session.add(paper)

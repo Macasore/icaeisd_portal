@@ -1,9 +1,10 @@
+from datetime import datetime, timedelta
 from app.models import User, Role
 from flask import Blueprint, request, jsonify
 from flask_mail import Message
 from app import mail
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.auth.helper import generatePassword, sendDetailsToEmail
+from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp
 from app import db, jwt, blacklist
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 
@@ -66,7 +67,7 @@ def login():
             "refresh_token": refresh_token
         }), 200
         
-    return jsonify({"msg": "Invalid username or password"}), 401
+    return jsonify({"msg": "Invalid username or password"}), 400
 
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True) 
@@ -82,7 +83,7 @@ def logout():
     current_user = get_jwt_identity()
     user = User.query.filter_by(id=current_user).first()
     if not user:
-        return jsonify({"msg": "Invalid user"}, 400)
+        return jsonify({"msg": "Invalid user"}), 400
     
     user.logged_in = False
     db.session.commit() 
@@ -113,8 +114,83 @@ def user_details():
             "first_name" : user.first_name,
             "last_name" : user.last_name,
             "phone_number" : user.phone_number
-        }, 200)
+        }), 200
     
-    return jsonify({"msg": "User doesn't exist"}, 404)
+    return jsonify({"msg": "User doesn't exist"}), 404
+    
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgotten_password():
+    data = request.json
+    email = data.get("email")
+    
+    user = User.query.filter_by(email = email).first()
+    
+    if not user:
+        return jsonify({"msg": "User with this email does not exist"}), 404
+    
+    otp = generateOtp()
+    user.otp = generate_password_hash(otp)
+    user.otp_expiry = datetime.now() + timedelta(minutes=15)
+    db.session.commit()
+    
+    message = f"Your otp for Password reset is {otp}. Otp would expire in 15minutes"
+    # sendEmail = send_email("Password Reset", message, user.email)
+    # if sendEmail[1] == 200: 
+    #     return jsonify({"message": "Email sent successfully."}), 200
+    # else:
+    #     return jsonify({"error": "Failed to send email."}), sendEmail[1]
+    return jsonify({"msg": message})
+        
+
+@auth_bp.route("/verify-otp", methods=["POST"])
+def verifyOtp():
+    data = request.json
+    email = data.get("email")
+    otp = data.get("otp")
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if user:
+        if not user.otp:
+            return jsonify({"msg": "Unauthorized for this operation"}), 403        
+        otp_valid = verify_otp(otp, user.otp)
+        
+        if otp_valid and user.otp_expiry > datetime.now():
+            user.otp_confirmed = True
+            user.otp = None
+            user.otp_expiry= None
+            db.session.commit()
+            return jsonify({"msg": "otp Verified successfully"}), 200
+        else:
+            return jsonify({"msg": "Invalid otp or expired otp"}), 400
+    return jsonify({"msg": "User doesn't exist"}), 404
+
+@auth_bp.route("/change-password", methods=["POST"])
+def changePassword():
+    data = request.json
+    email = data.get("email")
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if user and user.otp_confirmed == True:
+  
+        if (new_password != confirm_password):
+            return jsonify({"msg": "Passwords do not match"}), 400
+        
+        user.password = generate_password_hash(new_password)
+        user.otp_confirmed = None
+        db.session.commit()
+        
+        return jsonify({"msg": "Password changed successfully"}), 201
+        
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+    
+    return jsonify({"msg": "Unauthorized for this operation"}), 403
+    
+    
+            
     
     
