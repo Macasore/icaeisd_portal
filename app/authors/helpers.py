@@ -1,6 +1,8 @@
 from app.models import Paper, CoAuthor,User
 from sqlalchemy.orm import aliased
 
+MAX_ABSTRACT_WORDS = 300
+
 def check_paper_limits(email):
     Useralias = aliased(User)
     authored_papers_count = Paper.query.join(Useralias, Paper.author_id == Useralias.id).filter(Useralias.email == email).count()
@@ -18,3 +20,12 @@ def check_paper_limits(email):
         return False, "You have reached the maximum paper limit as an author or coauthor."
     
     return True, ""
+
+def count_words(text):
+    return len(text.split())
+
+def validate_abstract(abstract):
+    word_count = count_words(abstract)
+    if word_count > MAX_ABSTRACT_WORDS:
+        return False, word_count
+    return True, word_count

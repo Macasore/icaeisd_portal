@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, Role, CoAuthor, Paper
-from .helpers import check_paper_limits
+from .helpers import MAX_ABSTRACT_WORDS, check_paper_limits, validate_abstract
 from werkzeug.utils import secure_filename
 import os, json
 from app import db
@@ -35,6 +35,11 @@ def submitPaper():
     subtheme = request.form.get("subtheme")
     abstract = request.form.get("abstract")
     coauthors = request.form.get("coauthors", []) 
+    
+    is_valid, word_count = validate_abstract(abstract)
+    
+    if not is_valid:
+        return jsonify({"msg": f"Abstract is too long. Current word count is {word_count}, but the limit is {MAX_ABSTRACT_WORDS} words."}), 400
     
     if 'file' not in request.files:
         return jsonify({"msg": "No file part in the request"}), 400
