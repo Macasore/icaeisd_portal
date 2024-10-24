@@ -5,6 +5,8 @@ from .helpers import MAX_ABSTRACT_WORDS, check_paper_limits, validate_abstract
 from werkzeug.utils import secure_filename
 import os, json
 from app import db
+import ftplib
+
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -29,12 +31,8 @@ def submitPaper():
     if not can_submit:
         return jsonify({"msg": f"author {current_user_email} cannoxt be added: {message}"}), 400
     
-    if not can_submit:
-        return jsonify({"msg": message}), 403
     
     title = request.form.get("title")
-    theme = request.form.get("theme")
-    subtheme = request.form.get("subtheme")
     abstract = request.form.get("abstract")
     coauthors = request.form.get("coauthors", []) 
     
@@ -58,13 +56,39 @@ def submitPaper():
         return jsonify({"msg": "Only PDF files are allowed"}), 400
     
     file_name = secure_filename(file.filename)
-    upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], theme, subtheme).replace(" ", "_")
-    print(upload_folder)
-    os.makedirs(upload_folder, exist_ok=True)
+    theme = request.form.get("theme").replace(" ", "_")
+    subtheme = request.form.get("subtheme").replace(" ", "_")
+    upload_path = f"{theme}/{subtheme}/{file_name}"
     
-    file_path = os.path.join(upload_folder, file_name).replace(" ", "_")
+    try:
+        ftp = ftplib.FTP(current_app.config['FTP_HOST'])
+        ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
+        
+
+        ftp.cwd('/uploads') 
+        try:
+            ftp.mkd(theme)
+        except ftplib.error_perm:
+            pass  
+
+        try:
+            ftp.mkd(f"{theme}/{subtheme}")
+        except ftplib.error_perm:
+            pass  
+
+    
+        ftp.storbinary(f"STOR {upload_path}", file.stream)  
+        ftp.quit()
+
+        
+        file_path = f"ftp://{current_app.config['FTP_HOST']}/{upload_path}"
+
+    except ftplib.all_errors as e:
+        return jsonify({"msg": f"FTP upload failed: {str(e)}"}), 500
+
+    
+
     print(file_path)
-    file.save(file_path)
     
     paper = Paper(
         title=title,
@@ -81,7 +105,7 @@ def submitPaper():
             return jsonify({"msg": "Invalid coauthor data format"}), 400
     
     for coauthor_data in coauthors:
-        coauthor_email = coauthor_data.get('email')  # Safely access 'email'
+        coauthor_email = coauthor_data.get('email') 
         
         can_submit_coauthor, message = check_paper_limits(coauthor_email)
         

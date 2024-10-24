@@ -16,4 +16,6 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv('DefaultFromMail')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=1)
-    UPLOAD_FOLDER = os.getenv("folder")
+    FTP_HOST = os.getenv("FTP_HOST")
+    FTP_USER = os.getenv("FTP_USER")
+    FTP_PASS = os.getenv("FTP_PASS")
