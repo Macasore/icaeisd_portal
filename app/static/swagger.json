@@ -257,36 +257,32 @@
         ],
         "security": [
           {
-            "JWTAuth": []
+            "Bearer": []
           }
         ],
         "responses": {
           "200": {
             "description": "A list of papers submitted by the user.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "description": "The paper's ID."
-                      },
-                      "title": {
-                        "type": "string",
-                        "description": "The paper's title."
-                      },
-                      "abstract": {
-                        "type": "string",
-                        "description": "The paper's abstract."
-                      },
-                      "file_url": {
-                        "type": "string",
-                        "description": "URL to access the paper file."
-                      }
-                    }
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "description": "The paper's ID."
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "The paper's title."
+                  },
+                  "abstract": {
+                    "type": "string",
+                    "description": "The paper's abstract."
+                  },
+                  "file_url": {
+                    "type": "string",
+                    "description": "URL to access the paper file."
                   }
                 }
               }
@@ -310,38 +306,48 @@
         ],
         "security": [
           {
-            "JWTAuth": []
+            "Bearer": []
           }
         ],
-        "requestBody": {
-          "description": "File URL to download.",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file_url": {
-                    "type": "string",
-                    "description": "The URL of the file to be downloaded."
-                  }
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "File URL to download.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "file_url": {
+                  "type": "string",
+                  "description": "The URL of the file to be downloaded."
                 }
-              }
+              },
+              "required": ["file_url"]
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "The requested file is sent for download.",
-            "content": {
-              "application/octet-stream": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Success message."
+                }
+              }
             }
+          },
+          "400": {
+            "description": "Invalid file URL."
           },
           "401": {
             "description": "Unauthorized, JWT required."
           },
           "404": {
-            "description": "File not found or the user does not have access."
+            "description": "File not found."
           }
         }
       }
