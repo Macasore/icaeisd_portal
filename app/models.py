@@ -34,13 +34,26 @@ class Paper(db.Model):
     title = db.Column(db.String(200), nullable=False)
     theme = db.Column(db.String(200), nullable=False)
     subtheme = db.Column(db.String(200), nullable=False)
-    abstract = db.Column(db.String(350), nullable=True)
+    abstract = db.Column(db.Text, nullable=True)
     file_path = db.Column(db.String(255), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
     author = db.relationship('User', backref='papers')
     
     co_authors = db.relationship('CoAuthor', backref='paper', lazy=True, cascade="all, delete-orphan")
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'theme': self.theme,
+            'subtheme': self.subtheme,
+            'abstract': self.abstract,
+            'user_id': self.author_id,
+            'file_url': self.file_path,
+            'created_at': self.created_at.isoformat(),
+            'co_authors': [coauthor.serialize() for coauthor in self.co_authors]
+        }
     
 class CoAuthor(db.Model):
     __tablename__ = 'co_authors'
@@ -53,3 +66,10 @@ class CoAuthor(db.Model):
 
     def __repr__(self):
         return f"<CoAuthor(full_name={self.full_name}, email={self.email})>"
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.full_name,
+            'email': self.email
+        }

@@ -6,7 +6,7 @@
     "description": "API documentation for user registration, authentication, email sending, and paper submission"
   },
   "basePath": "/",
-  "schemes": ["http"],
+  "schemes": ["https"],
   "securityDefinitions": {
     "Bearer": {
       "type": "apiKey",
@@ -244,6 +244,104 @@
           },
           "404": {
             "description": "User not found"
+          }
+        }
+      }
+    },
+    "/author/get-papers": {
+      "get": {
+        "summary": "Retrieve all papers submitted by the current user",
+        "description": "This endpoint retrieves all papers submitted by the currently authenticated user based on their JWT token.",
+        "tags": [
+          "Papers"
+        ],
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of papers submitted by the user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "description": "The paper's ID."
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "The paper's title."
+                      },
+                      "abstract": {
+                        "type": "string",
+                        "description": "The paper's abstract."
+                      },
+                      "file_url": {
+                        "type": "string",
+                        "description": "URL to access the paper file."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized, JWT required."
+          },
+          "404": {
+            "description": "No papers found for the user."
+          }
+        }
+      }
+    },
+    "/author/files": {
+      "post": {
+        "summary": "Download a file submitted by the user",
+        "description": "This endpoint allows the currently authenticated user to download one of their submitted files, based on the file URL.",
+        "tags": [
+          "Papers"
+        ],
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "File URL to download.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file_url": {
+                    "type": "string",
+                    "description": "The URL of the file to be downloaded."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The requested file is sent for download.",
+            "content": {
+              "application/octet-stream": {}
+            }
+          },
+          "401": {
+            "description": "Unauthorized, JWT required."
+          },
+          "404": {
+            "description": "File not found or the user does not have access."
           }
         }
       }
