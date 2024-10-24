@@ -40,8 +40,8 @@ def register():
     db.session.add(user)
     db.session.commit()
     if user.role != Role.ATTENDEE:
-        # sendDetailsToEmail(username, password, email)
-        return jsonify({"msg": f"Please check your email for login details, username:{username}, password:{password}"}), 200
+        sendDetailsToEmail(username, password, email)
+        return jsonify({"msg": f"Please check your email for login detail"}), 200
     return jsonify({"msg": "Registration successful"}), 200
     
     
@@ -134,12 +134,11 @@ def forgotten_password():
     db.session.commit()
     
     message = f"Your otp for Password reset is {otp}. Otp would expire in 15minutes"
-    # sendEmail = send_email("Password Reset", message, user.email)
-    # if sendEmail[1] == 200: 
-    #     return jsonify({"message": "Email sent successfully."}), 200
-    # else:
-    #     return jsonify({"error": "Failed to send email."}), sendEmail[1]
-    return jsonify({"msg": message})
+    sendEmail = send_email("Password Reset", message, user.email)
+    if sendEmail[1] == 200: 
+        return jsonify({"message": "Email sent successfully."}), 200
+    else:
+        return jsonify({"error": "Failed to send email."}), sendEmail[1]
         
 
 @auth_bp.route("/verify-otp", methods=["POST"])
