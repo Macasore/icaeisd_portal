@@ -248,6 +248,88 @@
         }
       }
     },
+    "/submit-paper": {
+            "post": {
+                "summary": "Submit a paper",
+                "description": "Allows authors to submit a paper with co-authors.",
+                "produces": ["application/json"],
+                "consumes": ["multipart/form-data"],
+                "tags": [
+          "Papers"
+        ],
+                "parameters": [
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string",
+                        "description": "The title of the paper."
+                    },
+                    {
+                        "name": "theme",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string",
+                        "description": "The theme of the paper."
+                    },
+                    {
+                        "name": "subtheme",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string",
+                        "description": "The subtheme of the paper."
+                    },
+                    {
+                        "name": "abstract",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string",
+                        "description": "Abstract of the paper."
+                    },
+                    {
+                        "name": "coauthors",
+                        "in": "formData",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Co-author's name."
+                                },
+                                "email": {
+                                    "type": "string",
+                                    "description": "Co-author's email."
+                                }
+                            }
+                        },
+                        "description": "List of co-authors."
+                    },
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "required": true,
+                        "type": "file",
+                        "description": "The PDF file of the paper."
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Paper submitted successfully."
+                    },
+                    "400": {
+                        "description": "Bad request, validation error."
+                    },
+                    "403": {
+                        "description": "Unauthorized for this operation."
+                    },
+                    "404": {
+                        "description": "User not found."
+                    }
+                }
+            }
+        },
     "/author/get-papers": {
       "get": {
         "summary": "Retrieve all papers submitted by the current user",
