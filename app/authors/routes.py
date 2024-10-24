@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 import os, json
 from app import db
 
+MAX_FILE_SIZE = 5 * 1024 * 1024
+
 author_bp = Blueprint('author',__name__ )
 
 @author_bp.route("/submit-paper", methods=["POST"])
@@ -48,6 +50,9 @@ def submitPaper():
     
     if file.filename == '':
         return jsonify({"msg": "No selected file"}), 400
+    
+    if file.content_length > MAX_FILE_SIZE:
+        return jsonify({"msg": "File size exceeds the limit of 5 MB."}), 400
     
     if not file.filename.lower().endswith('.pdf'):
         return jsonify({"msg": "Only PDF files are allowed"}), 400
