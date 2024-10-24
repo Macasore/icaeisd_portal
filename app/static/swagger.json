@@ -248,7 +248,7 @@
         }
       }
     },
-    "/submit-paper": {
+    "/author/submit-paper": {
             "post": {
                 "summary": "Submit a paper",
                 "description": "Allows authors to submit a paper with co-authors.",
