@@ -1,3 +1,4 @@
+from io import BytesIO
 from flask import Blueprint, request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, Role, CoAuthor, Paper
@@ -89,13 +90,14 @@ def submitPaper():
     
 
     print(file_path)
+    upload_path = "/uploads/"+ upload_path
     
     paper = Paper(
         title=title,
         theme=theme,
         subtheme=subtheme,
         abstract=abstract,
-        file_path=file_path,
+        file_path=upload_path,
         author_id=author.id
     )
     if coauthors:
@@ -126,14 +128,19 @@ def submitPaper():
 def getPapers():
     current_user = get_jwt_identity()
     
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+    
     user_papers = Paper.query.filter_by(author_id=current_user).all()
     
     if not user_papers:
-        return None
+        return jsonify({"msg": "No paper found for user"}), 200
     
     return jsonify([paper.serialize() for paper in user_papers]), 200
 
-@author_bp.route('/files', methods=['POST'])
+@author_bp.route('/getPaper', methods=['GET'])
 @jwt_required()
 def get_file():
     current_user = get_jwt_identity()
@@ -142,23 +149,33 @@ def get_file():
     if not user:
         return jsonify({"msg": "Invalid user"}), 404
 
-    data = request.json
-    file_url = data.get("file_url")
+    file_path = request.args.get('file_path')
+    
+    if not file_path:
+        return jsonify({"msg": "File path not provided"}), 400
+    
+    paper = Paper.query.filter_by(file_path=file_path).first()
+    
+    if not paper:
+        return jsonify({"msg": "file not found"}), 404
+    
+    if paper.author_id != user.id:
+        return jsonify({"msg": "You don't have access to this file"}), 403
+        
+    try:
+        # Connect to the FTP server
+        with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
+            ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
 
-    normalized_path = os.path.normpath(file_url)
-    print(f"Normalized path: {normalized_path}")
+            # Navigate to the directory and retrieve the file
+            file_stream = BytesIO()
+            ftp.retrbinary(f'RETR {file_path}', file_stream.write)
 
-    paper = Paper.query.filter_by(file_path=normalized_path).first()
+            file_stream.seek(0)  # Go back to the start of the file stream
 
-    if paper and paper.author_id == user.id:
-        file_path = os.path.join(os.getcwd(), normalized_path)
-        print(f"Full file path: {file_path}")
+            # Sending the file as a response
+            file_name = file_path.split('/')[-1]  # Extract the file name from the path
+            return send_file(file_stream, as_attachment=True, download_name=file_name)
 
-        if os.path.exists(file_path):
-            print("File found, sending file...")
-            return send_file(file_path, as_attachment=True)
-        else:
-            return jsonify({"msg": "File not found"}), 404
-    else:
-        return jsonify({"msg": "Requested paper doesn't exist"}), 404
-        return jsonify({"msg": "requested paper doesn't exist"}), 404
+    except ftplib.all_errors as e:
+        return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500

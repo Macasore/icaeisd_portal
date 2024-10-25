@@ -6,7 +6,7 @@
     "description": "API documentation for user registration, authentication, email sending, and paper submission"
   },
   "basePath": "/",
-  "schemes": ["https"],
+  "schemes": ["http"],
   "securityDefinitions": {
     "Bearer": {
       "type": "apiKey",
@@ -252,6 +252,11 @@
             "post": {
                 "summary": "Submit a paper",
                 "description": "Allows authors to submit a paper with co-authors.",
+                "security": [
+          {
+            "Bearer": []
+          }
+        ],
                 "produces": ["application/json"],
                 "consumes": ["multipart/form-data"],
                 "tags": [
@@ -333,10 +338,8 @@
     "/author/get-papers": {
       "get": {
         "summary": "Retrieve all papers submitted by the current user",
-        "description": "This endpoint retrieves all papers submitted by the currently authenticated user based on their JWT token.",
-        "tags": [
-          "Papers"
-        ],
+        "description": "Retrieves all papers submitted by the currently authenticated user based on their JWT token.",
+        "tags": ["Papers"],
         "security": [
           {
             "Bearer": []
@@ -379,13 +382,12 @@
         }
       }
     },
-    "/author/files": {
-      "post": {
-        "summary": "Download a file submitted by the user",
-        "description": "This endpoint allows the currently authenticated user to download one of their submitted files, based on the file URL.",
-        "tags": [
-          "Papers"
-        ],
+
+    "/author/getPaper": {
+      "get": {
+        "summary": "Download a specific paper submitted by the user",
+        "description": "Allows the currently authenticated user to download a specified paper file by providing the file path.",
+        "tags": ["Papers"],
         "security": [
           {
             "Bearer": []
@@ -393,43 +395,31 @@
         ],
         "parameters": [
           {
-            "in": "body",
-            "name": "body",
-            "description": "File URL to download.",
+            "name": "file_path",
+            "in": "query",
             "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "file_url": {
-                  "type": "string",
-                  "description": "The URL of the file to be downloaded."
-                }
-              },
-              "required": ["file_url"]
-            }
+            "type": "string",
+            "description": "The path of the file to be downloaded."
           }
         ],
         "responses": {
           "200": {
-            "description": "The requested file is sent for download.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "description": "Success message."
-                }
-              }
-            }
+            "description": "The requested file is sent for download."
           },
           "400": {
-            "description": "Invalid file URL."
+            "description": "File path not provided."
           },
           "401": {
             "description": "Unauthorized, JWT required."
           },
+          "403": {
+            "description": "User doesn't have access to this file."
+          },
           "404": {
             "description": "File not found."
+          },
+          "500": {
+            "description": "FTP download failed."
           }
         }
       }
