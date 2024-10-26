@@ -193,8 +193,10 @@ def deletePaper():
         return jsonify({"msg": "Invalid user"}), 404
     
     paper_id = request.args.get('paper-id')
+    print(paper_id)
     
-    paper = Paper.query.filter_by(id=paper_id).first()
+    paper = Paper.query.filter_by(id=paper_id)
+    print(paper)
     
     if not paper:
         return jsonify({"msg": "paper not found"}), 404
