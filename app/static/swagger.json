@@ -522,7 +522,7 @@
         }
       }
     },
-    "/author/edit-paper/{paper_id}": {
+    "/author/edit-paper/{paper-id}": {
         "put": {
             "summary": "Edit a paper",
             "description": "Allows authors to edit a previously submitted paper.",
