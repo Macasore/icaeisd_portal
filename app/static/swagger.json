@@ -521,6 +521,103 @@
           }
         }
       }
+    },
+    "/author/edit-paper/{paper_id}": {
+        "put": {
+            "summary": "Edit a paper",
+            "description": "Allows authors to edit a previously submitted paper.",
+            "security": [
+                {
+                    "Bearer": []
+                }
+            ],
+            "produces": ["application/json"],
+            "consumes": ["multipart/form-data"],
+            "tags": [
+                "Papers"
+            ],
+            "parameters": [
+                {
+                    "name": "paper_id",
+                    "in": "path",
+                    "required": true,
+                    "type": "integer",
+                    "description": "The ID of the paper to be edited."
+                },
+                {
+                    "name": "title",
+                    "in": "formData",
+                    "required": false,
+                    "type": "string",
+                    "description": "The title of the paper."
+                },
+                {
+                    "name": "theme",
+                    "in": "formData",
+                    "required": false,
+                    "type": "string",
+                    "description": "The theme of the paper."
+                },
+                {
+                    "name": "subtheme",
+                    "in": "formData",
+                    "required": false,
+                    "type": "string",
+                    "description": "The subtheme of the paper."
+                },
+                {
+                    "name": "abstract",
+                    "in": "formData",
+                    "required": false,
+                    "type": "string",
+                    "description": "Abstract of the paper."
+                },
+                {
+                    "name": "coauthors",
+                    "in": "formData",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Co-author's name."
+                            },
+                            "email": {
+                                "type": "string",
+                                "description": "Co-author's email."
+                            }
+                        }
+                    },
+                    "description": "List of co-authors."
+                },
+                {
+                    "name": "file",
+                    "in": "formData",
+                    "required": false,
+                    "type": "file",
+                    "description": "The new PDF file of the paper."
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Paper updated successfully."
+                },
+                "400": {
+                    "description": "Bad request, validation error."
+                },
+                "403": {
+                    "description": "Unauthorized for this operation."
+                },
+                "404": {
+                    "description": "User or paper not found."
+                },
+                "500": {
+                    "description": "Internal server error."
+                }
+            }
+        }
     }
   }
 }
