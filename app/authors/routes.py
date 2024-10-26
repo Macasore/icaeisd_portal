@@ -195,7 +195,7 @@ def deletePaper():
     paper_id = request.args.get('paper-id')
     print(paper_id)
     
-    paper = Paper.query.filter_by(id=paper_id)
+    paper = Paper.query.filter_by(id=paper_id).first()
     print(paper)
     
     if not paper:
