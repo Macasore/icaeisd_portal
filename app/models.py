@@ -8,19 +8,29 @@ class Role(enum.Enum):
     REVIEWER = 'reviewer'
     EDITOR = 'editor'
     ATTENDEE = 'attendee'
+    
+class PaperStatus(enum.Enum):
+    A = 'accepted'
+    R = 'rejected'
+    P = 'pending'
+    AMAR = 'accept with major revision'
+    AMIR = 'accept with minor revision'
+    
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(128), unique=True, nullable=False)
+    username = db.Column(db.String(128), unique=True, nullable=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     is_paid = db.Column(db.Boolean, default=False)
+    payment_confirmed = db.Column(db.Boolean, default=False)
+    payment_path = db.Column(db.String(100), nullable=True)
     logged_in = db.Column(db.Boolean, default=False)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
     role = db.Column(db.Enum(Role), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True),
                            server_default=func.now())
@@ -36,6 +46,7 @@ class Paper(db.Model):
     subtheme = db.Column(db.String(200), nullable=False)
     abstract = db.Column(db.Text, nullable=True)
     file_path = db.Column(db.String(255), nullable=False)
+    paper_status = db.Column(db.Enum(PaperStatus), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
     author = db.relationship('User', backref='papers')
@@ -51,6 +62,7 @@ class Paper(db.Model):
             'abstract': self.abstract,
             'user_id': self.author_id,
             'file_url': self.file_path,
+            'paper_status': self.paper_status.name,
             'created_at': self.created_at.isoformat(),
             'co_authors': [coauthor.serialize() for coauthor in self.co_authors]
         }

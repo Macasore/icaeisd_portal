@@ -6,7 +6,7 @@
     "description": "API documentation for user registration, authentication, email sending, and paper submission"
   },
   "basePath": "/",
-  "schemes": ["http"],
+  "schemes": ["https"],
   "securityDefinitions": {
     "Bearer": {
       "type": "apiKey",
@@ -420,6 +420,104 @@
           },
           "500": {
             "description": "FTP download failed."
+          }
+        }
+      }
+    },
+    "/payment/attendee-payment": {
+  "post": {
+    "summary": "Make a payment",
+    "description": "Process payment for an attendee, including file upload and user registration.",
+    "tags": [
+      "Payment"
+    ],
+    "parameters": [
+      {
+        "in": "formData",
+        "name": "email",
+        "required": true,
+        "type": "string",
+        "description": "Email of the attendee."
+      },
+      {
+        "in": "formData",
+        "name": "first_name",
+        "required": true,
+        "type": "string",
+        "description": "First name of the attendee."
+      },
+      {
+        "in": "formData",
+        "name": "last_name",
+        "required": true,
+        "type": "string",
+        "description": "Last name of the attendee."
+      },
+      {
+        "in": "formData",
+        "name": "phone_number",
+        "required": true,
+        "type": "string",
+        "description": "Phone number of the attendee."
+      },
+      {
+        "in": "formData",
+        "name": "role",
+        "required": true,
+        "type": "string",
+        "description": "Role of the attendee."
+      },
+      {
+        "in": "formData",
+        "name": "file",
+        "required": true,
+        "type": "file",
+        "description": "Payment confirmation file."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Payment processed successfully, email confirmation sent."
+      },
+      "400": {
+        "description": "Invalid payment details or user already exists."
+      },
+      "500": {
+        "description": "FTP upload failed or server error."
+      }
+    }
+  }
+},
+    "/author/delete-paper": {
+      "delete": {
+        "summary": "Delete a submitted paper",
+        "description": "Deletes a paper submitted by the author",
+        "tags": [
+          "Papers"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "paper_id",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "The ID of the paper to be deleted."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paper deleted successfully"
+          },
+          "404": {
+            "description": "Paper not found"
+          },
+          "403": {
+            "description": "Unauthorized for this operation"
           }
         }
       }

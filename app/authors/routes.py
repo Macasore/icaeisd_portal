@@ -1,12 +1,14 @@
 from io import BytesIO
 from flask import Blueprint, request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import User, Role, CoAuthor, Paper
+from app.models import User, Role, CoAuthor, Paper, PaperStatus
 from .helpers import MAX_ABSTRACT_WORDS, check_paper_limits, validate_abstract
 from werkzeug.utils import secure_filename
 import os, json
 from app import db
+from app.auth.helper import sendEmail
 import ftplib
+from sqlalchemy.exc import SQLAlchemyError
 
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -50,7 +52,7 @@ def submitPaper():
     if file.filename == '':
         return jsonify({"msg": "No selected file"}), 400
     
-    if file.content_length > MAX_FILE_SIZE:
+    if request.content_length > MAX_FILE_SIZE:
         return jsonify({"msg": "File size exceeds the limit of 5 MB."}), 400
     
     if not file.filename.lower().endswith('.pdf'):
@@ -88,7 +90,6 @@ def submitPaper():
         return jsonify({"msg": f"FTP upload failed: {str(e)}"}), 500
 
     
-
     print(file_path)
     upload_path = "/uploads/"+ upload_path
     
@@ -98,7 +99,8 @@ def submitPaper():
         subtheme=subtheme,
         abstract=abstract,
         file_path=upload_path,
-        author_id=author.id
+        author_id=author.id,
+        paper_status=PaperStatus("pending")
     )
     if coauthors:
         try:
@@ -119,7 +121,8 @@ def submitPaper():
         
     db.session.add(paper)
     db.session.commit()
-    
+    message = "Dear Author,\n\nThank you for your submission to ICAEISD 2024.\nKindly check the portal for the status of your manuscript status while we review your paper.\n\n\nRegard ICAEISD 2024 Team."
+    sendEmail("Paper Submission", message, current_user_email )
     return jsonify({"msg": "Paper submitted successfully"}), 201
     
     
@@ -163,19 +166,68 @@ def get_file():
         return jsonify({"msg": "You don't have access to this file"}), 403
         
     try:
-        # Connect to the FTP server
+       
         with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
             ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
 
-            # Navigate to the directory and retrieve the file
+            
             file_stream = BytesIO()
             ftp.retrbinary(f'RETR {file_path}', file_stream.write)
 
-            file_stream.seek(0)  # Go back to the start of the file stream
+            file_stream.seek(0) 
 
-            # Sending the file as a response
-            file_name = file_path.split('/')[-1]  # Extract the file name from the path
+            file_name = file_path.split('/')[-1] 
             return send_file(file_stream, as_attachment=True, download_name=file_name)
 
     except ftplib.all_errors as e:
         return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500
+    
+    
+@author_bp.route('/delete-paper', methods=['DELETE'])
+@jwt_required()
+def deletePaper():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+    
+    paper_id = request.args.get('paper-id')
+    
+    paper = Paper.query.filter_by(id=paper_id).first()
+    
+    if not paper:
+        return jsonify({"msg": "paper not found"}), 404
+    
+    if paper.author_id != user.id:
+        return jsonify({"msg": "You don't have access to this file"}), 403
+    
+    file_path = paper.file_path
+    
+    dir_path, file_name = '/'.join(file_path.split('/')[:-1]), file_path.split('/')[-1]
+
+    
+    try:
+        with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
+            ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
+            ftp.cwd(dir_path)
+            
+            
+            if file_name not in ftp.nlst():
+                print(ftp.nlst())
+                return jsonify({"msg": "file not found on the server"}), 404
+            
+            ftp.delete(file_name)
+    except ftplib.all_errors as e:
+        return jsonify({"msg": f"failed to delete file from server: {str(e)}"}), 500
+    
+    try:
+        db.session.delete(paper)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"msg": f"Failed to delete paper from database: {str(e)}"}), 500
+    
+    return jsonify({"msg": "Paper deleted successfully"}), 200
+    
+    

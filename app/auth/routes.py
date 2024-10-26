@@ -96,7 +96,9 @@ def send_email():
     try:
         msg = Message("Test Email", 
                       recipients=["david@nucleus.com.ng"])  
-        msg.body = "This is a test email sent from Flask-Mail."
+        message = "Dear Author,\n\nThank you for your submission to ICAEISD 2024.\nKindly check the portal for the status of your manuscript status while we review your paper.\n\n\nRegard ICAEISD 2024 Team."
+
+        msg.body = message
         mail.send(msg)
         return "Email sent!"
     except Exception as e:
