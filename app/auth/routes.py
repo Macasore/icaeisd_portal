@@ -91,18 +91,17 @@ def logout():
     blacklist.add(jti)
     return jsonify({"msg": "Successfully logged out"}), 200
 
-@auth_bp.route('/send-email')
+@auth_bp.route('/send-email', methods=["POST"])
 def send_email():
-    try:
-        msg = Message("Test Email", 
-                      recipients=["david@nucleus.com.ng"])  
-        message = "Dear Author,\n\nThank you for your submission to ICAEISD 2024.\nKindly check the portal for the status of your manuscript status while we review your paper.\n\n\nRegard ICAEISD 2024 Team."
-
-        msg.body = message
-        mail.send(msg)
-        return "Email sent!"
-    except Exception as e:
-        return str(e)
+    data = request.json
+    subject = data.get('subject')
+    email = data.get('email')
+    message = data.get('message')
+    name = data.get('name')
+    
+    message_to_send = f"Name: {name}\n\nEmail: {email}\n\nSubject: {subject}\n\n\nMessage: \n{message}"
+    
+    return sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
 
 @auth_bp.route("/user-details", methods=["GET"])
 @jwt_required()

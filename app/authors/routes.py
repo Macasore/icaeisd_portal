@@ -116,7 +116,7 @@ def submitPaper():
         if not can_submit_coauthor:
             return jsonify({"msg": f"Coauthor {coauthor_email} cannot be added: {message}"}), 400
         
-        coauthor = CoAuthor(full_name=coauthor_data.get('name'), email=coauthor_email, paper=paper)
+        coauthor = CoAuthor(first_name=coauthor_data.get('first_name'),last_name=coauthor_data.get('last_name'), email=coauthor_email, paper=paper)
         db.session.add(coauthor)
         
     db.session.add(paper)
@@ -329,7 +329,7 @@ def editPaper(paper_id):
             if not can_submit_coauthor:
                 return jsonify({"msg": f"Coauthor {coauthor_email} cannot be added: {message}"}), 400
 
-            coauthor = CoAuthor(full_name=coauthor_data.get('name'), email=coauthor_email, paper=paper)
+            coauthor = CoAuthor(first_name=coauthor_data.get('first_name'), last_name=coauthor_data.get('last_name'), email=coauthor_email, paper=paper)
             db.session.add(coauthor)
 
     db.session.commit()

@@ -77,17 +77,19 @@ class CoAuthor(db.Model):
     __tablename__ = 'co_authors'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    full_name = db.Column(db.String(255), nullable=False)
+    first_name = db.Column(db.String(255), nullable=True)
+    last_name = db.Column(db.String(255), nullable=True)
     email = db.Column(db.String(255), nullable=False)
 
     paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=False)
 
     def __repr__(self):
-        return f"<CoAuthor(full_name={self.full_name}, email={self.email})>"
+        return f"<CoAuthor(first_name={self.first_name},last_name={self.last_name}, email={self.email})>"
     
     def serialize(self):
         return {
             'id': self.id,
-            'name': self.full_name,
+            'first name': self.first_name,
+            'last name': self.last_name,
             'email': self.email
         }
