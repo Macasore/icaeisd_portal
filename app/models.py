@@ -66,7 +66,7 @@ class Paper(db.Model):
             'user_id': self.author_id,
             'file_url': self.file_path,
             'paper_status': self.paper_status.name,
-            'is_paid': self.paper_is_paid,
+            'is_paid': self.is_paid,
             'payment_confirmed': self.payment_confirmed,
             'payment_path': self.payment_path,
             'created_at': self.created_at.isoformat(),
