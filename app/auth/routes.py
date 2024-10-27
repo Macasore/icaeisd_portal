@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from flask_mail import Message
 from app import mail
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp
+from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp, sendEmail
 from app import db, jwt, blacklist
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 
@@ -136,11 +136,11 @@ def forgotten_password():
     db.session.commit()
     
     message = f"Your otp for Password reset is {otp}. Otp would expire in 15minutes"
-    sendEmail = send_email("Password Reset", message, user.email)
-    if sendEmail[1] == 200: 
-        return jsonify({"message": "Email sent successfully."}), 200
+    send_email = sendEmail("Password Reset", message, user.email)
+    if send_email[1] == 200: 
+        return jsonify({"message": "kindly check your email for an otp."}), 200
     else:
-        return jsonify({"error": "Failed to send email."}), sendEmail[1]
+        return jsonify({"error": "Failed to send email."}), send_email[1]
         
 
 @auth_bp.route("/verify-otp", methods=["POST"])
