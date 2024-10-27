@@ -177,7 +177,7 @@ def get_file():
             file_stream.seek(0) 
 
             file_name = file_path.split('/')[-1] 
-            return send_file(file_stream, as_attachment=True, download_name=file_name)
+            return send_file(file_stream, mimetype='application/pdf', as_attachment=True, download_name=file_name)
 
     except ftplib.all_errors as e:
         return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500
