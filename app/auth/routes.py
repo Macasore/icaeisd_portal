@@ -3,6 +3,7 @@ from app.models import User, Role
 from flask import Blueprint, request, jsonify
 from flask_mail import Message
 from app import mail
+from flask_cors import cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp, sendEmail
 from app import db, jwt, blacklist
@@ -92,6 +93,7 @@ def logout():
     return jsonify({"msg": "Successfully logged out"}), 200
 
 @auth_bp.route('/send-email', methods=["POST"])
+@cross_origin(origins="*")
 def send_email():
     data = request.json
     subject = data.get('subject')
