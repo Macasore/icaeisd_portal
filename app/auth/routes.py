@@ -93,7 +93,6 @@ def logout():
     return jsonify({"msg": "Successfully logged out"}), 200
 
 @auth_bp.route('/send-email', methods=["POST"])
-@cross_origin(origins="*")
 def send_email():
     data = request.json
     subject = data.get('subject')
@@ -103,7 +102,9 @@ def send_email():
     
     message_to_send = f"Name: {name}\n\nEmail: {email}\n\nSubject: {subject}\n\n\nMessage: \n{message}"
     
-    return sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
+    sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
+    
+    return jsonify({"msg": "Your message has been sent successfully, you'd get a response via email shortly"})
 
 @auth_bp.route("/user-details", methods=["GET"])
 @jwt_required()

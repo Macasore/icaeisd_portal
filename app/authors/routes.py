@@ -339,16 +339,3 @@ def editPaper(paper_id):
     sendEmail("Paper Update", message, current_user_email)
 
     return jsonify({"msg": "Paper updated successfully"}), 200
-
-@author_bp.route('/send-email', methods=["POST"])
-@cross_origin(origins="*")
-def send_email():
-    data = request.json
-    subject = data.get('subject')
-    email = data.get('email')
-    message = data.get('message')
-    name = data.get('name')
-    
-    message_to_send = f"Name: {name}\n\nEmail: {email}\n\nSubject: {subject}\n\n\nMessage: \n{message}"
-    
-    return sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
