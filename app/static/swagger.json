@@ -6,7 +6,7 @@
     "description": "API documentation for user registration, authentication, email sending, and paper submission"
   },
   "basePath": "/",
-  "schemes": ["https"],
+  "schemes": ["http"],
   "securityDefinitions": {
     "Bearer": {
       "type": "apiKey",
@@ -244,6 +244,45 @@
           },
           "404": {
             "description": "User not found"
+          }
+        }
+      }
+    },
+    "/auth/send-email": {
+      "post": {
+        "summary": "Sending contact information via email",
+        "description": "send information to email",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Send email",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "email": { "type": "string" },
+                "message": { "type": "string" },
+                "subject": { "type": "string" }
+              },
+              "required": ["name", "email", "message", "subject"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "email sent successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": { "type": "string" },
+                "refresh_token": { "type": "string" }
+              }
+            }
+          },
+          "401": {
+            "description": "email issue"
           }
         }
       }
