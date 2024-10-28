@@ -6,7 +6,7 @@
     "description": "API documentation for user registration, authentication, email sending, and paper submission"
   },
   "basePath": "/",
-  "schemes": ["http"],
+  "schemes": ["https"],
   "securityDefinitions": {
     "Bearer": {
       "type": "apiKey",
