@@ -8,6 +8,7 @@ class Role(enum.Enum):
     REVIEWER = 'reviewer'
     EDITOR = 'editor'
     ATTENDEE = 'attendee'
+    ADMIN = 'admin'
     
 class PaperStatus(enum.Enum):
     A = 'accepted'

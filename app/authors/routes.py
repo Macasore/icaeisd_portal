@@ -6,7 +6,7 @@ from .helpers import MAX_ABSTRACT_WORDS, check_paper_limits, validate_abstract
 from werkzeug.utils import secure_filename
 import os, json
 from app import db
-from app.auth.helper import sendEmail
+from app.auth.helper import sendCustomEmail, sendEmail
 import ftplib
 from flask_cors import cross_origin
 from sqlalchemy.exc import SQLAlchemyError
@@ -123,7 +123,7 @@ def submitPaper():
     db.session.add(paper)
     db.session.commit()
     message = "Dear Author,\n\nThank you for your submission to ICAEISD 2024.\nKindly check the portal for the status of your manuscript status while we review your paper.\n\n\nRegard ICAEISD 2024 Team."
-    sendEmail("Paper Submission", message, current_user_email )
+    sendCustomEmail(subject="Paper Submission", email_body=message, useremail=current_user_email, firstname=author.first_name, title="Contact Message")
     return jsonify({"msg": "Paper submitted successfully"}), 201
     
     

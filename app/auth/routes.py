@@ -5,7 +5,7 @@ from flask_mail import Message
 from app import mail
 from flask_cors import cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp, sendEmail
+from app.auth.helper import generateOtp, generatePassword, sendDetailsToEmail, verify_otp, sendEmail, sendCustomEmail
 from app import db, jwt, blacklist
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 
@@ -40,8 +40,9 @@ def register():
     print(user.role)
     db.session.add(user)
     db.session.commit()
+    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {email}\n Password: {password}"
     if user.role != Role.ATTENDEE:
-        sendDetailsToEmail(username, password, email)
+        sendCustomEmail(subject="Login Credentials", email_body=message_to_send, useremail=email, firstname=first_name, title="Login Details")
         return jsonify({"msg": f"Please check your email for login detail"}), 200
     return jsonify({"msg": "Registration successful"}), 200
     
@@ -100,9 +101,11 @@ def send_email():
     message = data.get('message')
     name = data.get('name')
     
-    message_to_send = f"Name: {name}\n\nEmail: {email}\n\nSubject: {subject}\n\n\nMessage: \n{message}"
+    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {name}\n Password: advaerv"
     
-    sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
+    # sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
+    
+    sendCustomEmail(subject="Contact-Us", email_body=message_to_send, useremail=email, firstname=name, title="Contact Message")
     
     return jsonify({"msg": "Your message has been sent successfully, you'd get a response via email shortly"})
 
@@ -138,7 +141,7 @@ def forgotten_password():
     db.session.commit()
     
     message = f"Your otp for Password reset is {otp}. Otp would expire in 15minutes"
-    send_email = sendEmail("Password Reset", message, user.email)
+    send_email =sendCustomEmail(subject="Password reset", email_body=message, useremail=email, firstname=user.first_name, title="Contact Message")
     if send_email[1] == 200: 
         return jsonify({"message": "kindly check your email for an otp."}), 200
     else:
