@@ -36,65 +36,44 @@ def sendEmail(subject, message, useremail):
         print(f"Error sending email: {e}")
         return "An error occurred while sending the email. Please try again later.", 500
 def sendCustomEmail(subject, email_body, useremail, firstname, title, cc=None):
-    try:
-        email_message = MIMEMultipart("alternative")
-        email_message["Subject"] = subject
-        email_message["From"] = os.getenv("DefaultFromMail")
-        email_message["To"] = useremail
-        
-        if cc:
-            email_message["Cc"] = ", ".join(cc)
-            
-        text = """\
-        Hi,
-        Check out the new post on the Mailtrap blog:
-        SMTP Server for Testing: Cloud-based or Local?
-        https://blog.mailtrap.io/2018/09/27/cloud-or-local-smtp-server/
-        Feel free to let us know what content would be useful for you!"""
-        
-        with open("app/static/logo.png", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            
-        html = f"""\
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
-        
-        <p>Dear {firstname},</p>
-        
-        <p>{email_body}</p>
-        
-        <p>Best Regards,</p>
-        
-        <p><strong>ICAEISD 2024 Team</strong></p>
-        
-        <a href="icaeisdcovenantuniversity.org" style="display: inline-block; background-color: #7a008d; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
-            Go to Website
-        </a>
-        </div>
-        
-        <div style="margin-top: 20px; font-size: 12px; color: #666;">
-        <p>Copyright 2024 Covenant University. All rights reserved.</p>
-        </div>
-    </body>
-        """
-
-        part1 = MIMEText(text, "plain")
-        part2 = MIMEText(html, "html")
-        email_message.attach(part1)
-        email_message.attach(part2)
-
-        with smtplib.SMTP(os.getenv("MAIL_SERVER"), 587) as server:
-            server.starttls()
-            server.login(os.getenv("MAIL_USERNAME"), os.getenv("MAIL_PASSWORD"))
-            server.sendmail(
-                os.getenv("DefaultFromMail"), useremail, email_message.as_string()
-            )
-
-        return "Mail sent", 200
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        return "An error occurred while sending the email. Please try again later.", 500
+    msg = Message(subject=subject, sender='support@icaeisdcovenantuniversity.org',cc=cc, recipients=[useremail])
+    msg.body = email_body
+    title = title
+    author_name = firstname
+    body = email_body
+    msg.html = f'''<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
+                
+      <p>Dear {author_name},</p>
+      
+      <p>{body}</p>
+      
+      <p>Best Regards,</p>
+      
+      <p><strong>ICAEISD 2024 Team</strong></p>
+      
+      <a href="https://icaeisd2024.covenantuniversity.edu.ng" style="display: inline-block; background-color: #7a008d; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+        Go to Website
+      </a>
+    </div>
+    
+    <div style="margin-top: 20px; font-size: 12px; color: #666;">
+      <p>Copyright 2024 Covenant University. All rights reserved.</p>
+    </div>
+  </body>
+</html>
+'''
+    mail.send(msg)
+    return "Message sent!"
+    mail.send(msg)
+    return "Message sent!"
    
   
     

@@ -104,11 +104,13 @@ def send_email():
     message = data.get('message')
     name = data.get('name')
     
-    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {name}\n Password: advaerv"
-    
-    # sendEmail("Contact-Us", message_to_send, "icaeisd2024sec@cu.edu.ng")
-    
-    sendCustomEmail(subject="Contact-Us", email_body=message_to_send, useremail=email, firstname=name, title="Contact Message")
+    message_to_send = f"""
+    <p><strong>Name:</strong> {name}</p>
+    <p><strong>Email:</strong> {email}</p>
+    <p><strong>Subject:</strong> {subject}</p>
+    <p><strong>Message:</strong><br>{message}</p>
+    """
+    sendCustomEmail(subject="Contact-Us", email_body=message_to_send, useremail="icaeisd2024sec@cu.edu.ng", firstname="icaeisd", title="Contact Message", cc=["support@icaeisdcovenantuniversity.org"])
     
     return jsonify({"msg": "Your message has been sent successfully, you'd get a response via email shortly"})
 
