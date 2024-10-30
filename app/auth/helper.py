@@ -35,12 +35,16 @@ def sendEmail(subject, message, useremail):
     except Exception as e:
         print(f"Error sending email: {e}")
         return "An error occurred while sending the email. Please try again later.", 500
-def sendCustomEmail(subject, email_body, useremail, firstname, title):
+def sendCustomEmail(subject, email_body, useremail, firstname, title, cc=None):
     try:
         email_message = MIMEMultipart("alternative")
         email_message["Subject"] = subject
         email_message["From"] = os.getenv("DefaultFromMail")
         email_message["To"] = useremail
+        
+        if cc:
+            email_message["Cc"] = ", ".join(cc)
+            
         text = """\
         Hi,
         Check out the new post on the Mailtrap blog:

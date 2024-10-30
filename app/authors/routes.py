@@ -109,6 +109,7 @@ def submitPaper():
         except json.JSONDecodeError:
             return jsonify({"msg": "Invalid coauthor data format"}), 400
     
+    coauthor_emails = []
     for coauthor_data in coauthors:
         coauthor_email = coauthor_data.get('email') 
         
@@ -119,11 +120,12 @@ def submitPaper():
         
         coauthor = CoAuthor(first_name=coauthor_data.get('first_name'),last_name=coauthor_data.get('last_name'), email=coauthor_email, paper=paper)
         db.session.add(coauthor)
+        coauthor_emails.append(coauthor_email)
         
     db.session.add(paper)
     db.session.commit()
-    message = "Dear Author,\n\nThank you for your submission to ICAEISD 2024.\nKindly check the portal for the status of your manuscript status while we review your paper.\n\n\nRegard ICAEISD 2024 Team."
-    sendCustomEmail(subject="Paper Submission", email_body=message, useremail=current_user_email, firstname=author.first_name, title="Contact Message")
+    message = "\n\nThank you for your submission to ICAEISD 2024.\nKindly check back for the status of your manuscript while we review your paper."
+    sendCustomEmail(subject="Paper Submission", email_body=message, useremail=current_user_email, firstname=author.first_name, title="Contact Message",cc=coauthor_emails)
     return jsonify({"msg": "Paper submitted successfully"}), 201
     
     

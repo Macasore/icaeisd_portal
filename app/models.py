@@ -43,10 +43,10 @@ class User(UserMixin, db.Model):
         return {
             'id': self.id,
             'username': self.username,
-            'first name': self.first_name,
-            'last name': self.last_name,
-            'email address': self.email,
-            'phone number': self.phone_number,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email_address': self.email,
+            'phone_number': self.phone_number,
             'is_paid': self.is_paid,
             'role': self.role.name
         }
