@@ -48,15 +48,13 @@ def sendCustomEmail(subject, email_body, useremail, firstname, title):
         https://blog.mailtrap.io/2018/09/27/cloud-or-local-smtp-server/
         Feel free to let us know what content would be useful for you!"""
         
-        with open("app/static/cu_logo.jpg", "rb") as image_file:
+        with open("app/static/logo.png", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             
         html = f"""\
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
-        <img src="data:image/jpeg;base64,{encoded_string}" alt="Covenant University Logo" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
-            <h1 style="color: #4b0082; font-size: 24px; margin-bottom: 20px;">{title}</h1>
         
         <p>Dear {firstname},</p>
         

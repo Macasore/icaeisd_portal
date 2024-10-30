@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role
+from app.models import User, Role, Paper
 from app import db
-from app.auth.helper import sendEmail, generatePassword, sendDetailsToEmail
+from app.auth.helper import sendCustomEmail, sendEmail, generatePassword, sendDetailsToEmail
+from sqlalchemy.exc import SQLAlchemyError
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -34,7 +35,7 @@ def login():
         
     return jsonify({"msg": "Invalid username or password"}), 400
 
-@admin_bp.route('/register', methods=["POST"])
+@admin_bp.route('/registeruser', methods=["POST"])
 def register():
     data = request.json
     email = data.get('email')
@@ -45,6 +46,7 @@ def register():
     password = generatePassword()
     username = email
     
+    print(f"username: {username}, password: {password} ")
     if not email or not first_name or not last_name or not phone_number:
         return jsonify({"msg": "All fields are required"}), 400
     
@@ -61,7 +63,158 @@ def register():
     print(user.role)
     db.session.add(user)
     db.session.commit()
-    if user.role != Role.ATTENDEE:
-        sendDetailsToEmail(username, password, email)
-        return jsonify({"msg": f"Please check your email for login detail"}), 200
-    return jsonify({"msg": "Registration successful"}), 200
+    
+    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {email}\n Password: {password}"
+   
+    sendCustomEmail(subject="Login Credentials", email_body=message_to_send, useremail=email, firstname=first_name, title="Login Details")
+    
+    return jsonify({"msg": f"User successfully created"}), 200
+    
+
+
+@admin_bp.route('/getauthors', methods=['GET'])
+@jwt_required()
+def getAllAuthors():
+    current_user = get_jwt_identity()
+    
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    authors = User.query.filter_by(role=Role.AUTHOR).all()
+    
+    if not authors:
+        return jsonify({"msg": "No author found"}), 400
+    
+    return jsonify([author.serialize() for author in authors]), 200
+
+@admin_bp.route('/delete/author/int:<author_id>', methods=['DELETE'])
+@jwt_required()
+def deleteAuthor(author_id):
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    author = User.query.filter_by(id=author_id).first()
+    
+    if not author:
+        return jsonify({"msg": "author not found"}), 404
+    
+    if author.role != Role.AUTHOR:
+            return jsonify({"msg": "this user is not an author"}), 400
+    
+    try:
+        db.session.delete(author)
+        db.session.commit()
+        
+        return jsonify({"msg": "author deleted successfully"}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"msg": f"Failed to delete author from database: {str(e)}"}), 500
+    
+
+@admin_bp.route('/getreviewers', methods=['GET'])
+@jwt_required()
+def getAllReviewers():
+    current_user = get_jwt_identity()
+    
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    reviewers = User.query.filter_by(role=Role.REVIEWER).all()
+
+    
+    if not reviewers:
+        return jsonify({"msg": "No author found"}), 400
+    
+    return jsonify([reviewer.serialize() for reviewer in reviewers]), 200
+    
+
+@admin_bp.route("/get-all-papers", methods=["GET"])
+@jwt_required()
+def getPapers():
+    current_user = get_jwt_identity()
+    
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+    
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+    
+    user_papers = Paper.query.all()
+    
+    if not user_papers:
+        return jsonify({"msg": "No papers found"}), 200
+    
+    return jsonify([paper.serialize() for paper in user_papers]), 200
+    
+    
+@admin_bp.route('/delete/paper/int:<paper_id>', methods=['DELETE'])
+@jwt_required()
+def deletePaper(paper_id):
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    paper = Paper.query.filter_by(id=paper_id).first()
+    
+    if not paper:
+        return jsonify({"msg": "paper not found"}), 404
+    
+    
+    try:
+        db.session.delete(paper)
+        db.session.commit()
+        
+        return jsonify({"msg": "paper deleted successfully"}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"msg": f"Failed to delete paper from database: {str(e)}"}), 500
+    
+@admin_bp.route('/delete/reviewer/int:<reviewer_id>', methods=['DELETE'])
+@jwt_required()
+def deleteReviewer(reviewer_id):
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    reviewer = User.query.filter_by(id=reviewer_id).first()
+    
+    if not reviewer:
+        return jsonify({"msg": "reviewer not found"}), 404
+    
+    
+    try:
+        db.session.delete(reviewer)
+        db.session.commit()
+        
+        return jsonify({"msg": "reviewer deleted successfully"}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
