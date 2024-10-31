@@ -341,3 +341,33 @@ def editPaper(paper_id):
     sendEmail("Paper Update", message, current_user_email)
 
     return jsonify({"msg": "Paper updated successfully"}), 200
+
+@author_bp.route('/paper/<int:paper_id>/review-history', methods=['GET'])
+@jwt_required()
+def get_review_history(paper_id):
+    current_user = get_jwt_identity() 
+    current_user_email = User.query.filter_by(id=current_user).first().email
+    
+    author = User.query.filter_by(id=current_user).first()
+    
+    if not author:
+        return jsonify({"msg": "User not found"}), 404
+    
+    if author.role != Role.AUTHOR:
+        return jsonify({"msg": "Unauthorized for this operation"}), 403
+    paper = Paper.query.get(paper_id)
+    
+    if not paper:
+        return jsonify({"msg": "Paper not found"}), 404
+
+    history = [
+        {
+            "reviewer_id": entry.reviewer_id,
+            "status": entry.status.value,
+            "comment": entry.comment,
+            "reviewed_at": entry.reviewed_at.isoformat()
+        }
+        for entry in paper.review_history
+    ]
+    
+    return jsonify({"history": history}), 200

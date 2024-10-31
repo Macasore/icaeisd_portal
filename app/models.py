@@ -16,6 +16,7 @@ class PaperStatus(enum.Enum):
     P = 'pending'
     AMAR = 'accept with major revision'
     AMIR = 'accept with minor revision'
+    CUR = 'currently under review'
     
 
 class User(UserMixin, db.Model):
@@ -38,6 +39,7 @@ class User(UserMixin, db.Model):
     otp = db.Column(db.String(255), nullable=True)
     otp_expiry = db.Column(db.DateTime(timezone=True))
     otp_confirmed = db.Column(db.Boolean, default=False)
+    assigned_theme = db.Column(db.String(255), nullable=True)
     
     def serialize(self):
         return {
@@ -50,9 +52,9 @@ class User(UserMixin, db.Model):
             'is_paid': self.is_paid,
             'role': self.role.name
         }
-    
 class Paper(db.Model):
     __tablename__ = "papers"
+    
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(200), nullable=False)
     theme = db.Column(db.String(200), nullable=False)
@@ -65,14 +67,20 @@ class Paper(db.Model):
     paper_status = db.Column(db.Enum(PaperStatus), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
-    author = db.relationship('User', backref='papers')
-    
-    
+    author = db.relationship('User', backref='papers', foreign_keys=[author_id])
+    review_comment = db.Column(db.Text, nullable=True)
+    assigned_reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    # Update this relationship to avoid ambiguity
+    review_history = db.relationship('ReviewHistory', back_populates='paper')
+
     co_authors = db.relationship('CoAuthor', backref='paper', lazy=True, cascade="all, delete-orphan")
     
     def serialize(self):
         return {
             'id': self.id,
+            'author_firstname': self.author.first_name,
+            'author_lastname': self.author.last_name,
             'title': self.title,
             'theme': self.theme,
             'subtheme': self.subtheme,
@@ -84,9 +92,10 @@ class Paper(db.Model):
             'payment_confirmed': self.payment_confirmed,
             'payment_path': self.payment_path,
             'created_at': self.created_at.isoformat(),
-            'co_authors': [coauthor.serialize() for coauthor in self.co_authors]
+            'co_authors': [coauthor.serialize() for coauthor in self.co_authors],
+            'reviews': [review.serialize() for review in self.review_history]  # Accessing history directly
         }
-    
+
 class CoAuthor(db.Model):
     __tablename__ = 'co_authors'
 
@@ -106,4 +115,26 @@ class CoAuthor(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'email': self.email
+        }
+        
+
+class ReviewHistory(db.Model):
+    __tablename__ = 'review_history'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=False)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.Enum(PaperStatus), nullable=False)  # Use PaperStatus enum
+    comment = db.Column(db.Text, nullable=True)
+    reviewed_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    
+    paper = db.relationship('Paper', back_populates='review_history')
+    reviewer = db.relationship('User', backref='review_histories')
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'comment': self.comment,
+            'status': self.status.name,
+            'reviewed_at': self.reviewed_at.isoformat()
         }

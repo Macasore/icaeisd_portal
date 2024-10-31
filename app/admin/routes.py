@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role, Paper
+from app.models import User, Role, Paper, PaperStatus
 from app import db
 from app.auth.helper import sendCustomEmail, sendEmail, generatePassword, sendDetailsToEmail
 from sqlalchemy.exc import SQLAlchemyError
@@ -36,12 +36,24 @@ def login():
     return jsonify({"msg": "Invalid username or password"}), 400
 
 @admin_bp.route('/registeruser', methods=["POST"])
+@jwt_required()
 def register():
+    current_user = get_jwt_identity()
+    
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
     data = request.json
     email = data.get('email')
     first_name = data.get('first_name')
     last_name = data.get('last_name')
     phone_number = data.get('phone_number')
+    theme = data.get('theme')
     role = data.get('role')
     password = generatePassword()
     username = email
@@ -59,13 +71,16 @@ def register():
     
     
     user = User(email=email, first_name=first_name, last_name=last_name, phone_number=phone_number, username=username,
-                password=generate_password_hash(password), role=Role(role))
+                password=generate_password_hash(password), role=Role(role), assigned_theme=theme)
     print(user.role)
     db.session.add(user)
     db.session.commit()
     
-    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {email}\n Password: {password}"
-   
+    message_to_send = f"""
+    <p>You've been added as a {role} on icaeisd 2024, kindly check below for your login credentials</p>
+    <p><strong>Username:</strong> {username}</p>
+    <p><strong>Password:</strong> {password}</p>
+    """
     sendCustomEmail(subject="Login Credentials", email_body=message_to_send, useremail=email, firstname=first_name, title="Login Details")
     
     return jsonify({"msg": f"User successfully created"}), 200
@@ -218,3 +233,67 @@ def deleteReviewer(reviewer_id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
+    
+@admin_bp.route('/assign-theme', methods=['POST'])
+@jwt_required()
+def assign_theme():
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    data = request.json
+    reviewer_id = data.get('reviewer_id')
+    theme = data.get('theme')
+
+    reviewer = User.query.get(reviewer_id)
+    if not reviewer:
+        return jsonify({"msg": "Reviewer not found"}), 404
+    
+    if reviewer.role != Role.REVIEWER:
+        return jsonify({"msg": "this user is not authorized for this operation"}), 403
+
+    reviewer.assigned_theme = theme
+    db.session.commit()
+    return jsonify({"msg": "Theme assigned successfully"}), 200
+
+
+    
+@admin_bp.route('/unassign-theme/<int:reviewer_id>', methods=['GET'])
+@jwt_required()
+def unassign_theme(reviewer_id):
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+
+    reviewer = User.query.get(reviewer_id)
+    if not reviewer:
+        return jsonify({"msg": "Reviewer not found"}), 404
+    
+    if reviewer.role != Role.REVIEWER:
+        return jsonify({"msg": "this user is not authorized for this operation"}), 403
+    
+    papers = Paper.query.filter_by(assigned_reviewer_id=reviewer_id).all()
+    
+    if not papers:
+        pass
+    for paper in papers:
+        paper.assigned_reviewer_id=None
+        if paper.paper_status == PaperStatus.CUR:
+            paper.paper_status = PaperStatus.P
+
+    reviewer.assigned_theme = None
+    db.session.commit()
+    return jsonify({"msg": "Theme unassigned successfully"}), 200
+
+

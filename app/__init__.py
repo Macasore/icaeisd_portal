@@ -58,10 +58,12 @@ def create_app():
     from app.authors.routes import author_bp
     from app.payment.routes import payment_bp
     from app.admin.routes import admin_bp
+    from app.reviewer.routes import reviewer_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(author_bp, url_prefix='/author')
     app.register_blueprint(payment_bp, url_prefix='/payment')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(reviewer_bp, url_prefix='/reviewer')
     
     @app.errorhandler(NoAuthorizationError)
     def handle_missing_token_error(e):

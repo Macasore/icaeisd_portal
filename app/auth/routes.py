@@ -43,7 +43,11 @@ def register():
     print(user.role)
     db.session.add(user)
     db.session.commit()
-    message_to_send = f"Find your Login Credentials for icaeisd portal below\n\n\n Username: {email}\n Password: {password}"
+    message_to_send = f"""
+    <p>Find your login credentials below</p>
+    <p><strong>Username:</strong> {username}</p>
+    <p><strong>Password:</strong> {password}</p>
+    """
     if user.role != Role.ATTENDEE:
         sendCustomEmail(subject="Login Credentials", email_body=message_to_send, useremail=email, firstname=first_name, title="Login Details")
         return jsonify({"msg": f"Please check your email for login detail"}), 200
