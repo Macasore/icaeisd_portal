@@ -151,7 +151,7 @@ def forgotten_password():
     db.session.commit()
     
     message = f"Your otp for Password reset is {otp}. Otp would expire in 15minutes"
-    send_email =sendCustomEmail(subject="Password reset", email_body=message, useremail=email, firstname=user.first_name, title="Contact Message")
+    send_email =sendCustomEmail(subject="Change Password", email_body=message, useremail=email, firstname=user.first_name, title="Contact Message")
     if send_email[1] == 200: 
         return jsonify({"message": "kindly check your email for an otp."}), 200
     else:
