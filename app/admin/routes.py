@@ -207,9 +207,11 @@ def deletePaper(paper_id):
         db.session.rollback()
         return jsonify({"msg": f"Failed to delete paper from database: {str(e)}"}), 500
     
-@admin_bp.route('/delete/reviewer/int:<reviewer_id>', methods=['DELETE'])
+@admin_bp.route('/delete/reviewer/int:<reviewer_id>', methods=['DELETE', 'OPTIONS'])
 @jwt_required()
 def deleteReviewer(reviewer_id):
+    if request.method == 'OPTIONS':
+        return '', 200
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
     

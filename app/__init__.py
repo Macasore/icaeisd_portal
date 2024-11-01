@@ -45,7 +45,7 @@ def create_app():
     migrate.init_app(app, db)
     mail.init_app(app)
     jwt.init_app(app)
-    CORS(app)
+    CORS(app, methods=["GET", "POST", "DELETE", "OPTIONS"])
     
     
     from app.models import User
