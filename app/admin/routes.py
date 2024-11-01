@@ -211,7 +211,48 @@ def deletePaper(paper_id):
 @jwt_required()
 def deleteReviewer(reviewer_id):
     if request.method == 'OPTIONS':
-        return '', 200
+        print("Got here")
+        if request.method == 'OPTIONS':
+            response = jsonify({"msg": "Options preflight"})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            response.headers.add("Access-Control-Allow-Methods", "DELETE, OPTIONS")
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            return response, 204
+    current_user = get_jwt_identity() 
+    user = User.query.filter_by(id=current_user).first()
+    
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+        
+    reviewer = User.query.filter_by(id=reviewer_id).first()
+    
+    if not reviewer:
+        return jsonify({"msg": "reviewer not found"}), 404
+    
+    
+    try:
+        db.session.delete(reviewer)
+        db.session.commit()
+        
+        return jsonify({"msg": "reviewer deleted successfully"}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
+
+@admin_bp.route('/delete/reviewers/int:<reviewer_id>', methods=['POST', 'OPTIONS'])
+@jwt_required()
+def deleteReviewers(reviewer_id):
+    if request.method == 'OPTIONS':
+        if request.method == 'OPTIONS':
+            print("Got here")
+            response = jsonify({"msg": "Options preflight"})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            response.headers.add("Access-Control-Allow-Methods", "DELETE, OPTIONS")
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            return response, 204
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
     
