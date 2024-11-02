@@ -122,8 +122,8 @@ class ReviewHistory(db.Model):
     __tablename__ = 'review_history'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=False)
-    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=True)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     status = db.Column(db.Enum(PaperStatus), nullable=False)  # Use PaperStatus enum
     comment = db.Column(db.Text, nullable=True)
     reviewed_at = db.Column(db.DateTime(timezone=True), server_default=func.now())

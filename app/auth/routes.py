@@ -130,7 +130,8 @@ def user_details():
             "first_name" : user.first_name,
             "last_name" : user.last_name,
             "phone_number" : user.phone_number,
-            "role": user.role.name
+            "role": user.role.name,
+            "id": user.id
         }), 200
     
     return jsonify({"msg": "User doesn't exist"}), 404
