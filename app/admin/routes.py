@@ -278,9 +278,9 @@ def deleteReviewers(reviewer_id):
         return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
 
 
-@admin_bp.route('/delete/reviewers', methods=['DELETE', 'OPTIONS'])
+@admin_bp.route('/delete/reviewer', methods=['DELETE', 'OPTIONS'])
 @jwt_required()
-def deleteReviewers():
+def deleteReviewers2():
     if request.method == 'OPTIONS':
         if request.method == 'OPTIONS':
             print("Got here")
