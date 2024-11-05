@@ -3,8 +3,10 @@ from io import BytesIO
 from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from app import db
-from app.models import Paper, PaperStatus, ReviewHistory, Role, User
+from app.models import Paper, PaperStatus, ReviewHistory, Reviewer, Role, User
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from app.reviewer.helpers import update_paper_status
 
 
 
@@ -77,8 +79,12 @@ def getClaimedPapers():
     
     if not reviewer.assigned_theme:
         return jsonify({"msg": "user not assigned a theme yet"}), 400
-
-    papers = Paper.query.filter_by(assigned_reviewer_id=current_user).all()
+    
+    claimed_papers = Reviewer.query.filter_by(reviewer_id=current_user).all()
+    
+    paper_ids = [claim.paper_id for claim in claimed_papers]
+    
+    papers = Paper.query.filter(Paper.id.in_(paper_ids)).all()
 
     return jsonify([paper.serialize() for paper in papers]), 200
 
@@ -103,6 +109,7 @@ def claim_paper(reviewer_id):
     if not paper:
         return jsonify({"msg": "Paper not found"}), 404
     
+    
     if reviewer_id != user.id:
         return jsonify({"msg": "Reviewer id not authorized for this operation"}), 403
     
@@ -111,14 +118,23 @@ def claim_paper(reviewer_id):
     
     if paper.paper_status == PaperStatus.A:
         return jsonify({"msg": "can't review an already accepted paper"}), 400
+    
+    if (paper.reviewer_count or 0) >= 2:
+        return jsonify({"msg": "Reviewer limit reached"}), 403
         
-
-    if paper.paper_status == PaperStatus.CUR:
-        return jsonify({"msg": "Paper is already being reviewed by another reviewer"}), 403
-
-
-    paper.assigned_reviewer_id = reviewer_id
+    review = Reviewer.query.filter_by(reviewer_id=reviewer_id).first()
+    
+    if review:
+        return jsonify({"msg": "you have already claimed this paper"}), 400
+    
+    reviewer_claim = Reviewer(paper_id=paper_id, reviewer_id=reviewer_id)
+    
+    if paper.reviewer_count is None:
+        paper.reviewer_count = 0
+        
+    paper.reviewer_count += 1
     paper.paper_status = PaperStatus.CUR
+    db.session.add(reviewer_claim)
     db.session.commit()
     return jsonify({"msg": "Paper claimed successfully"}), 200
 
@@ -142,14 +158,22 @@ def submit_review(reviewer_id):
     paper = Paper.query.get(paper_id)
     reviewer = User.query.get(reviewer_id)
     
-    if not paper or paper.assigned_reviewer_id != reviewer_id:
-        return jsonify({"msg": "Unauthorized or paper not found"}), 403
+    if not paper:
+        return jsonify({"msg": "paper not found"}), 404
     
     if not reviewer:
         return jsonify({"msg": "Reviewer not found"}), 404
     
     if reviewer_id != user.id:
         return jsonify({"msg": "Reviewer id not authorized for this operation"}), 403
+    
+    if paper.paper_status == PaperStatus.A:
+        return jsonify({"msg": "can't review an already accepted paper"}), 400
+    
+    reviewer_claim = Reviewer.query.filter_by(paper_id=paper_id, reviewer_id=reviewer_id).first()
+    
+    if not reviewer_claim:
+        return {"msg": "You have not claimed this paper."}, 403
     
     review_history_entry = ReviewHistory(
         paper_id=paper_id,
@@ -158,14 +182,18 @@ def submit_review(reviewer_id):
         comment=review_comment
     )
     
-    if PaperStatus(review_status) == PaperStatus.A:
-        print("sharp")
-        paper.assigned_reviewer_id = None
 
-    paper.paper_status = PaperStatus(review_status)
     paper.review_comment = review_comment 
     
     db.session.add(review_history_entry)
+    db.session.commit()
+    
+    final_paper_status = PaperStatus.CUR
+    print(paper.reviewer_count)
+    if paper.reviewer_count == 2:
+        print("yeah")
+        final_paper_status = update_paper_status(paper_id)
+    paper.paper_status = final_paper_status
     db.session.commit()
     return jsonify({"msg": "Review submitted and history logged"}), 200
 
@@ -197,12 +225,12 @@ def unclaim_paper(reviewer_id):
         return jsonify({"msg": "Reviewer id not authorized for this operation"}), 403
         
 
-    if paper.assigned_reviewer_id != user.id:
-        return jsonify({"msg": "not authorized for this operation"}), 403
-
-
-    paper.assigned_reviewer_id = None
-    paper.paper_status = PaperStatus.P
+    reviewer_claim = Reviewer.query.filter_by(paper_id=paper_id, reviewer_id=reviewer_id).first()
+    
+    if not reviewer_claim:
+        return jsonify({"msg": "you have not claimed this paper"}), 404
+    
+    db.session.delete(reviewer_claim)
     db.session.commit()
     return jsonify({"msg": "Paper unassigned successfully"}), 200
 
@@ -227,8 +255,10 @@ def delete_review(reviewer_id, paper_id):
     if not paper:
         return jsonify({"msg": "Paper not found"}), 404
     
-    if paper.assigned_reviewer_id != reviewer_id:
-        return jsonify({"msg": "not authorized for this operation"}), 403
+    reviewer_claim = Reviewer.query.filter_by(paper_id=paper_id, reviewer_id=reviewer_id).first()
+    
+    if not reviewer_claim:
+        return jsonify({"msg": "you have not claimed this paper"}), 404
     
     review = ReviewHistory.query.get(review_id)
     
@@ -257,8 +287,10 @@ def downloadPaper(paper_id):
     if not paper:
         return jsonify({"msg": "Paper not found"}), 404
     
-    if paper.assigned_reviewer_id != user.id:
-        return jsonify({"msg": "not authorized for this operation"}), 403
+    reviewer_claim = Reviewer.query.filter_by(paper_id=paper_id, reviewer_id=user.id).first()
+    
+    if not reviewer_claim:
+        return jsonify({"msg": "you have not claimed this paper"}), 404
     
     file_path = paper.file_path
     

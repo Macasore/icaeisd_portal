@@ -297,14 +297,15 @@ def unassign_theme(reviewer_id):
     if reviewer.role != Role.REVIEWER:
         return jsonify({"msg": "this user is not authorized for this operation"}), 403
     
-    papers = Paper.query.filter_by(assigned_reviewer_id=reviewer_id).all()
+    claimed_papers = Paper.query.filter_by(reviewer_id=reviewer_id).all()
     
-    if not papers:
-        pass
-    for paper in papers:
-        paper.assigned_reviewer_id=None
-        if paper.paper_status == PaperStatus.CUR:
-            paper.paper_status = PaperStatus.P
+    for claim in claimed_papers:
+        paper = Paper.query.get(claim.paper_id)
+        
+        if paper:
+            db.session.delete(claim)
+            if paper.paper_status == PaperStatus.CUR:
+                paper.paper_status = PaperStatus.P
 
     reviewer.assigned_theme = None
     db.session.commit()

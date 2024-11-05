@@ -17,6 +17,7 @@ class PaperStatus(enum.Enum):
     AMAR = 'accept with major revision'
     AMIR = 'accept with minor revision'
     CUR = 'currently under review'
+    RF = 'review feedback'
     
 
 class User(UserMixin, db.Model):
@@ -69,9 +70,9 @@ class Paper(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
     author = db.relationship('User', backref='papers', foreign_keys=[author_id])
     review_comment = db.Column(db.Text, nullable=True)
-    assigned_reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    reviewer_count = db.Column(db.Integer, default=0)
 
-    # Update this relationship to avoid ambiguity
+    
     review_history = db.relationship('ReviewHistory', back_populates='paper')
 
     co_authors = db.relationship('CoAuthor', backref='paper', lazy=True, cascade="all, delete-orphan")
@@ -92,8 +93,9 @@ class Paper(db.Model):
             'payment_confirmed': self.payment_confirmed,
             'payment_path': self.payment_path,
             'created_at': self.created_at.isoformat(),
+            'reviewer_count': self.reviewer_count,
             'co_authors': [coauthor.serialize() for coauthor in self.co_authors],
-            'reviews': [review.serialize() for review in self.review_history]  # Accessing history directly
+            'reviews': [review.serialize() for review in self.review_history] 
         }
 
 class CoAuthor(db.Model):
@@ -138,3 +140,14 @@ class ReviewHistory(db.Model):
             'status': self.status.name,
             'reviewed_at': self.reviewed_at.isoformat()
         }
+
+class Reviewer(db.Model):
+    __tablename__ = 'reviewers'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    paper_id = db.Column(db.Integer, db.ForeignKey('papers.id'), nullable=False)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    claimed_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    paper = db.relationship('Paper', backref='reviewers')
+    reviewer = db.relationship('User', backref='claimed_reviews')
