@@ -155,6 +155,7 @@ def submit_review(reviewer_id):
     paper_id = data.get('paper_id')
     review_comment = data.get('review_comment')
     review_status = data.get('review_status') 
+    review_questions = data.get('review_questions')
 
     paper = Paper.query.get(paper_id)
     reviewer = User.query.get(reviewer_id)
@@ -180,7 +181,8 @@ def submit_review(reviewer_id):
         paper_id=paper_id,
         reviewer_id=reviewer_id,
         status=PaperStatus(review_status),
-        comment=review_comment
+        comment=review_comment,
+        review_questions=review_questions
     )
     
 

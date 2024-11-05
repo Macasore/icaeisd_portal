@@ -129,6 +129,7 @@ class ReviewHistory(db.Model):
     status = db.Column(db.Enum(PaperStatus), nullable=False)  # Use PaperStatus enum
     comment = db.Column(db.Text, nullable=True)
     reviewed_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    review_questions = db.Column(db.Text, nullable=True)
     
     paper = db.relationship('Paper', back_populates='review_history')
     reviewer = db.relationship('User', backref='review_histories')
