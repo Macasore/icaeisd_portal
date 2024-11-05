@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role, Paper, PaperStatus
+from app.models import Reviewer, User, Role, Paper, PaperStatus
 from app import db
 from app.auth.helper import sendCustomEmail, sendEmail, generatePassword, sendDetailsToEmail
 from sqlalchemy.exc import SQLAlchemyError
@@ -297,7 +297,7 @@ def unassign_theme(reviewer_id):
     if reviewer.role != Role.REVIEWER:
         return jsonify({"msg": "this user is not authorized for this operation"}), 403
     
-    claimed_papers = Paper.query.filter_by(reviewer_id=reviewer_id).all()
+    claimed_papers = Reviewer.query.filter_by(reviewer_id=reviewer_id).all()
     
     for claim in claimed_papers:
         paper = Paper.query.get(claim.paper_id)
