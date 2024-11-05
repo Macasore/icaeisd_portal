@@ -3,6 +3,7 @@ from io import BytesIO
 from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from app import db
+from app.auth.helper import sendCustomEmail
 from app.models import Paper, PaperStatus, ReviewHistory, Reviewer, Role, User
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -195,6 +196,9 @@ def submit_review(reviewer_id):
         final_paper_status = update_paper_status(paper_id)
     paper.paper_status = final_paper_status
     db.session.commit()
+    author_email = paper.author.email
+    message = "A review has been submitted on your paper, kindly check your portal to view feedback"
+    sendCustomEmail(subject="Paper Review", email_body=message, useremail=author_email, firstname="Author", title="Paper Review")
     return jsonify({"msg": "Review submitted and history logged"}), 200
 
 
