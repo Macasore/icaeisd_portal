@@ -123,7 +123,7 @@ def claim_paper(reviewer_id):
     if (paper.reviewer_count or 0) >= 2:
         return jsonify({"msg": "Reviewer limit reached"}), 403
         
-    review = Reviewer.query.filter_by(reviewer_id=reviewer_id).first()
+    review = Reviewer.query.filter_by(reviewer_id=reviewer_id, paper_id=paper_id).first()
     
     if review:
         return jsonify({"msg": "you have already claimed this paper"}), 400

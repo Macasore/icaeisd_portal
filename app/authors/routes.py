@@ -235,13 +235,14 @@ def deletePaper():
     
     return jsonify({"msg": "Paper deleted successfully"}), 200
     
-@author_bp.route("/edit-paper/<int:paper_id>", methods=["PUT"])
+@author_bp.route("/edit-paper", methods=["PUT"])
 @jwt_required()
-def editPaper(paper_id):
+def editPaper():
     current_user = get_jwt_identity() 
     current_user_email = User.query.filter_by(id=current_user).first().email
     
     author = User.query.filter_by(id=current_user).first()
+    paper_id = request.args.get(paper_id)
     
     if not author:
         return jsonify({"msg": "User not found"}), 404
