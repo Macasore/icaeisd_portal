@@ -242,7 +242,7 @@ def editPaper():
     current_user_email = User.query.filter_by(id=current_user).first().email
     
     author = User.query.filter_by(id=current_user).first()
-    paper_id = request.args.get(paper_id)
+    paper_id = request.args.get("paper_id")
     
     if not author:
         return jsonify({"msg": "User not found"}), 404
