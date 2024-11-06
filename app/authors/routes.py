@@ -210,6 +210,11 @@ def deletePaper():
     file_path = paper.file_path
     
     dir_path, file_name = '/'.join(file_path.split('/')[:-1]), file_path.split('/')[-1]
+    
+    file_name2 = file_name.replace(" ", "_")
+    print(f"filename 2{file_name2}")
+    print("=======")    
+    print(file_name)
 
     
     try:
