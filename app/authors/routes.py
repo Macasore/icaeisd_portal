@@ -207,6 +207,9 @@ def deletePaper():
     if paper.author_id != user.id:
         return jsonify({"msg": "You don't have access to this file"}), 403
     
+    if paper.reviewer_count >= 1:
+        return jsonify({"msg": "can't delete paper already being reviewed"}), 400
+    
     file_path = paper.file_path
     
     dir_path, file_name = '/'.join(file_path.split('/')[:-1]), file_path.split('/')[-1]
