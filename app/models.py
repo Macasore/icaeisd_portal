@@ -51,7 +51,8 @@ class User(UserMixin, db.Model):
             'email_address': self.email,
             'phone_number': self.phone_number,
             'is_paid': self.is_paid,
-            'role': self.role.name
+            'role': self.role.name,
+            'theme': self.assigned_theme
         }
 class Paper(db.Model):
     __tablename__ = "papers"
