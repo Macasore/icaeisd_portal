@@ -77,7 +77,7 @@ def register():
     db.session.commit()
     
     message_to_send = f"""
-    <p>You've been added as a {role} on icaeisd 2024, kindly check below for your login credentials</p>
+    <p>You've been added as a/an {role} on icaeisd 2024, kindly check below for your login credentials</p>
     <p><strong>Username:</strong> {username}</p>
     <p><strong>Password:</strong> {password}</p>
     """
