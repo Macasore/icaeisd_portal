@@ -42,8 +42,7 @@ class User(UserMixin, db.Model):
     otp_confirmed = db.Column(db.Boolean, default=False)
     assigned_theme = db.Column(db.String(255), nullable=True)
     
-    papers = db.relationship('Paper', backref='author', cascade='all, delete-orphan', foreign_keys='Paper.author_id')
-    
+    papers = db.relationship('Paper', backref='paper_author', cascade='all, delete-orphan', foreign_keys='Paper.author_id')
     def serialize(self):
         return {
             'id': self.id,
@@ -71,7 +70,7 @@ class Paper(db.Model):
     paper_status = db.Column(db.Enum(PaperStatus), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())    
-    author = db.relationship('User', backref='papers', foreign_keys=[author_id])
+    paper_author = db.relationship('User')
     review_comment = db.Column(db.Text, nullable=True)
     reviewer_count = db.Column(db.Integer, default=0)
 
