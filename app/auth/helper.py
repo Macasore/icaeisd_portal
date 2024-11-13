@@ -36,44 +36,47 @@ def sendEmail(subject, message, useremail):
         print(f"Error sending email: {e}")
         return "An error occurred while sending the email. Please try again later.", 500
 def sendCustomEmail(subject, email_body, useremail, firstname, title, cc=None):
-    msg = Message(subject=subject, sender='support@icaeisdcovenantuniversity.org',cc=cc, recipients=[useremail])
-    msg.body = email_body
-    title = title
-    author_name = firstname
-    body = email_body
-    msg.html = f'''<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-  </head>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
-                
-      <p>Dear {author_name},</p>
-      
-      <p>{body}</p>
-      
-      <p>Best Regards,</p>
-      
-      <p><strong>ICAEISD 2024 Team</strong></p>
-      
-      <a href="https://icaeisd2024.covenantuniversity.edu.ng" style="display: inline-block; background-color: #7a008d; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
-        Go to Website
-      </a>
-    </div>
-    
-    <div style="margin-top: 20px; font-size: 12px; color: #666;">
-      <p>Copyright 2024 Covenant University. All rights reserved.</p>
-    </div>
-  </body>
-</html>
-'''
-    mail.send(msg)
-    return "Message sent!"
-    mail.send(msg)
-    return "Message sent!"
+    try:
+      msg = Message(subject=subject, sender='support@icaeisdcovenantuniversity.org',cc=cc, recipients=[useremail])
+      msg.body = email_body
+      title = title
+      author_name = firstname
+      body = email_body
+      msg.html = f'''<!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>{title}</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
+                        
+              <p>Dear {author_name},</p>
+              
+              <p>{body}</p>
+              
+              <p>Best Regards,</p>
+              
+              <p><strong>ICAEISD 2024 Team</strong></p>
+              
+              <a href="https://icaeisd2024.covenantuniversity.edu.ng" style="display: inline-block; background-color: #7a008d; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+                Go to Website
+              </a>
+            </div>
+            
+            <div style="margin-top: 20px; font-size: 12px; color: #666;">
+              <p>Copyright 2024 Covenant University. All rights reserved.</p>
+            </div>
+          </body>
+        </html>
+        '''
+      mail.send(msg)
+      return "Message sent!",200
+    except Exception as e:
+          print(f"Error sending email: {e}")
+          return "An error occurred while sending the email. Please try again later.", 500
+  
    
   
     

@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request
+import ftplib
+from io import BytesIO
+from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import Reviewer, User, Role, Paper, PaperStatus
@@ -311,4 +313,91 @@ def unassign_theme(reviewer_id):
     db.session.commit()
     return jsonify({"msg": "Theme unassigned successfully"}), 200
 
+@admin_bp.route('/payments', methods=['GET'])
+@jwt_required()
+def get_all_payments():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
 
+    if not user or user.role != Role.ADMIN:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    users = User.query.filter(User.payment_path.isnot(None)).all()
+
+    return jsonify([{
+        "id": u.id,
+        "email": u.email,
+        "payment_url": u.payment_path,
+        "is_paid": u.is_paid,
+        "payment_confirmed": u.payment_confirmed,
+        "created_at": u.created_at.isoformat()
+    } for u in users]), 200
+
+
+@admin_bp.route('/download/payment', methods=['GET'])
+@jwt_required()
+def download_payment():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+    
+    user_id = request.args.get("user_id")
+
+    if not user or user.role != Role.ADMIN:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    user_to_download = User.query.get(user_id)
+
+    if not user_to_download:
+        return jsonify({"msg": "User not found"}), 404
+
+    if not user_to_download.payment_path:
+        return jsonify({"msg": "No receipt available for download"}), 404
+    
+    file_path = user_to_download.payment_path
+
+    try:
+       
+        with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
+            ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
+
+            
+            file_stream = BytesIO()
+            ftp.retrbinary(f'RETR {file_path}', file_stream.write)
+
+            file_stream.seek(0) 
+
+            file_name = file_path.split('/')[-1] 
+            return send_file(file_stream, as_attachment=True, download_name=file_name)
+
+    except ftplib.all_errors as e:
+        return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500
+    
+@admin_bp.route('/payment/status', methods=['PUT'])
+@jwt_required()
+def confirm_or_reject_payment():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+
+    if not user or user.role != Role.ADMIN:
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    data = request.json
+    user_id = data.get('user_id')
+    new_status = data.get('status')
+
+    if new_status not in ['CONFIRMED', 'REJECTED']:
+        return jsonify({"msg": "Invalid status"}), 400
+
+    user_to_update = User.query.get(user_id)
+
+    if not user_to_update:
+        return jsonify({"msg": "User not found"}), 404
+
+    if new_status == 'CONFIRMED':
+        user_to_update.payment_confirmed = True
+    else:
+        user_to_update.payment_confirmed = False
+
+    db.session.commit()
+
+    return jsonify({"msg": f"Payment {new_status.lower()} successfully."}), 200

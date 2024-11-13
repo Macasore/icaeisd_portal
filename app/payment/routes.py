@@ -49,7 +49,8 @@ def makePaymentForAttendee():
     except ftplib.all_errors as e:
         return jsonify({"msg": f"FTP upload failed: {str(e)}"}), 500
     
-    user = User(email=email, first_name=first_name, last_name=last_name, phone_number=phone_number, role=Role(role), is_paid=True, payment_path=upload_path)
+    payment_path = "/payments/" + upload_path
+    user = User(email=email, first_name=first_name, last_name=last_name, phone_number=phone_number, role=Role(role), is_paid=True, payment_path=payment_path)
     db.session.add(user)
     db.session.commit()
 
@@ -104,7 +105,7 @@ def makePaymentForPaper(paper_id):
         return jsonify({"msg": f"FTP upload failed: {str(e)}"}), 500
     
     paper.is_paid = True
-    paper.payment_path = upload_path
+    paper.payment_path = "/payments/" + upload_path
     db.session.commit()
     
     return jsonify({"msg": "your payment has been received kindly check you email for confirmation receipt within 2-3 working days"}), 200
