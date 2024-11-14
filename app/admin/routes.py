@@ -184,11 +184,12 @@ def getPapers():
     return jsonify([paper.serialize() for paper in user_papers]), 200
     
     
-@admin_bp.route('/delete/paper/int:<paper_id>', methods=['DELETE'])
+@admin_bp.route('/delete/paper', methods=['DELETE'])
 @jwt_required()
-def deletePaper(paper_id):
+def deletePaper():
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
+    paper_id = request.args.get("paper_id")
     
     if not user:
         return jsonify({"msg": "Invalid user"}), 404
@@ -401,3 +402,46 @@ def confirm_or_reject_payment():
     db.session.commit()
 
     return jsonify({"msg": f"Payment {new_status.lower()} successfully."}), 200
+
+
+@admin_bp.route('/download-paper', methods=['GET'])
+@jwt_required()
+def downloadPaperAdmin():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+    
+    paper_id = request.args.get("paper_id")
+
+    if not user:
+        return jsonify({"msg": "Invalid user"}), 404
+    
+    if user.role != Role.ADMIN:
+            return jsonify({"msg": "not authorized for this operation"}), 403
+
+    paper = Paper.query.get(paper_id)
+    if not paper:
+        return jsonify({"msg": "Paper not found"}), 404
+    
+    file_path = paper.file_path
+    
+    if not file_path:
+        return jsonify({"msg": "File path not provided"}), 400
+     
+    try:
+       
+        with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
+            ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
+
+            
+            file_stream = BytesIO()
+            ftp.retrbinary(f'RETR {file_path}', file_stream.write)
+
+            file_stream.seek(0) 
+
+            file_name = file_path.split('/')[-1] 
+            return send_file(file_stream, mimetype='application/pdf', as_attachment=True, download_name=file_name)
+
+    except ftplib.all_errors as e:
+        return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500
+    
+   
