@@ -139,7 +139,7 @@ def claim_paper(reviewer_id):
     db.session.commit()
     return jsonify({"msg": "Paper claimed successfully"}), 200
 
-@reviewer_bp.route('/submit-review/<int:reviewer_id>', methods=['POST'])
+@reviewer_bp.route('/submit-review/<int:reviewer_id>', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def submit_review(reviewer_id):
     current_user = get_jwt_identity() 
