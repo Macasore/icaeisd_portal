@@ -57,9 +57,13 @@ def create_app():
     
     @app.after_request
     def apply_cors(response):
+        headers = {'Access-Control-Allow-Origin': '*',
+               'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+               'Access-Control-Allow-Headers': 'Content-Type'}
+        print("origin")
         if request.method.lower() == 'options':
-            print("okayy")
-            return Response()
+            print("options")
+            return jsonify(headers), 200
 
     
     from app.auth.routes import auth_bp
