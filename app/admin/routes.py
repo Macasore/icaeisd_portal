@@ -219,7 +219,6 @@ def deleteReviewers2():
         if request.method == 'OPTIONS':
             print("Got here")
             response = jsonify({"msg": "Options preflight"})
-            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             response.headers.add("Access-Control-Allow-Methods", "DELETE, OPTIONS")
             response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
             return response, 200
