@@ -57,9 +57,12 @@ def create_app():
     
     @app.after_request
     def apply_cors(response):
-        response.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin", "")
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS, PUT"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers.add('Content-Type', 'application/json')
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Expose-Headers', 'Content-Type,Content-Length,Authorization,X-Pagination')
+        print("origin")
         return response
 
     
