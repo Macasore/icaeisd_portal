@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -54,6 +54,14 @@ def create_app():
     @login.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    @app.after_request
+    def apply_cors(response):
+        response.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin", "")
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS, PUT"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response
+
     
     from app.auth.routes import auth_bp
     from app.authors.routes import author_bp

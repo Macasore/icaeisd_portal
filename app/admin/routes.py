@@ -215,14 +215,6 @@ def deletePaper():
 @admin_bp.route('/delete/reviewer', methods=['DELETE', 'OPTIONS'])
 @jwt_required()
 def deleteReviewers2():
-    if request.method == 'OPTIONS':
-        if request.method == 'OPTIONS':
-            print("Got here")
-            response = jsonify({"msg": "Options preflight"})
-            response.headers.add("Access-Control-Allow-Methods", "DELETE, OPTIONS")
-            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-            return response, 200
-        
     reviewer_id = request.args.get("reviewer_id")
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
