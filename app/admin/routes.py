@@ -1,7 +1,7 @@
 import ftplib
 from io import BytesIO
 from flask import Blueprint, current_app, jsonify, request, send_file
-from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import Reviewer, User, Role, Paper, PaperStatus
 from app import db
@@ -213,33 +213,44 @@ def deletePaper():
         return jsonify({"msg": f"Failed to delete paper from database: {str(e)}"}), 500
  
 @admin_bp.route('/delete/reviewer', methods=['DELETE', 'OPTIONS'])
-@jwt_required()
 def deleteReviewers2():
-    reviewer_id = request.args.get("reviewer_id")
-    current_user = get_jwt_identity() 
-    user = User.query.filter_by(id=current_user).first()
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 204
     
-    if not user:
-        return jsonify({"msg": "Invalid user"}), 404
-
-    if user.role != Role.ADMIN:
-            return jsonify({"msg": "not authorized for this operation"}), 403
-        
-    reviewer = User.query.filter_by(id=reviewer_id).first()
-    
-    if not reviewer:
-        return jsonify({"msg": "reviewer not found"}), 404
-    
-    
-    try:
-        db.session.delete(reviewer)
-        db.session.commit()
-        
-        return jsonify({"msg": "reviewer deleted successfully"}), 200
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
-    
+    # Only proceed with DELETE requests
+    if request.method == 'DELETE':
+        try:
+            # Verify JWT first
+            verify_jwt_in_request()
+            
+            reviewer_id = request.args.get("reviewer_id")
+            current_user = get_jwt_identity()
+            
+            user = User.query.filter_by(id=current_user).first()
+            
+            if not user:
+                return jsonify({"msg": "Invalid user"}), 404
+                
+            if user.role != Role.ADMIN:
+                return jsonify({"msg": "not authorized for this operation"}), 403
+                
+            reviewer = User.query.filter_by(id=reviewer_id).first()
+            
+            if not reviewer:
+                return jsonify({"msg": "reviewer not found"}), 404
+                
+            try:
+                db.session.delete(reviewer)
+                db.session.commit()
+                return jsonify({"msg": "reviewer deleted successfully"}), 200
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                return jsonify({"msg": f"Failed to delete reviewer from database: {str(e)}"}), 500
+        except Exception as e:
+            return jsonify({"msg": str(e)}), 401
+            
+    return jsonify({"msg": "Method not allowed"}), 405   
     
     
 @admin_bp.route('/assign-theme', methods=['POST'])
