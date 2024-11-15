@@ -143,6 +143,7 @@ def claim_paper(reviewer_id):
 @jwt_required()
 def submit_review(reviewer_id):
     if request.method == 'OPTIONS':
+        print("okay")
         return '', 204
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
