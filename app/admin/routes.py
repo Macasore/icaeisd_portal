@@ -158,7 +158,7 @@ def getAllReviewers():
 
     
     if not reviewers:
-        return jsonify({"msg": "No author found"}), 400
+        return jsonify({"msg": "No reviewers found"}), 400
     
     return jsonify([reviewer.serialize() for reviewer in reviewers]), 200
     
