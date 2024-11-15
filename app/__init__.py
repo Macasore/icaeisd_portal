@@ -45,7 +45,7 @@ def create_app():
     migrate.init_app(app, db)
     mail.init_app(app)
     jwt.init_app(app)
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://icaeisdcovenantuniversity.org"], "methods": ["GET", "POST", "DELETE", "OPTIONS", "PUT"]}})
+    CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS", "PUT"]}})
 
     
     

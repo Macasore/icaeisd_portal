@@ -230,12 +230,20 @@ def unclaim_paper(reviewer_id):
     if reviewer_id != user.id:
         return jsonify({"msg": "Reviewer id not authorized for this operation"}), 403
         
-
+    print("hmm")
     reviewer_claim = Reviewer.query.filter_by(paper_id=paper_id, reviewer_id=reviewer_id).first()
     
     if not reviewer_claim:
         return jsonify({"msg": "you have not claimed this paper"}), 404
     
+    paper_count = paper.reviewer_count - 1
+    
+    if paper_count == 0:
+        paper.paper_status = PaperStatus.P
+    else:
+        paper.paper_status = PaperStatus.CUR
+    
+    paper.reviewer_count -= 1    
     db.session.delete(reviewer_claim)
     db.session.commit()
     return jsonify({"msg": "Paper unassigned successfully"}), 200
