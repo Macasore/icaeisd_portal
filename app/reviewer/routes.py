@@ -142,6 +142,8 @@ def claim_paper(reviewer_id):
 @reviewer_bp.route('/submit-review/<int:reviewer_id>', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def submit_review(reviewer_id):
+    if request.method == 'OPTIONS':
+        return '', 204
     current_user = get_jwt_identity() 
     user = User.query.filter_by(id=current_user).first()
     
