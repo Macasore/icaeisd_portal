@@ -66,7 +66,10 @@ def login():
     
     if user and check_password_hash(user.password, password):
         user.logged_in = True
-        db.session.commit() 
+        db.session.commit()
+         
+        if user.role != Role.AUTHOR:
+            return jsonify({"msg": "not authorized for this operation"}), 403
         
         access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
