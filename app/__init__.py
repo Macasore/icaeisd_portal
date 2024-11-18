@@ -56,22 +56,22 @@ def create_app():
         return User.query.get(int(user_id))
     
     @app.after_request
-    def apply_cors(response):
+    def apply_cors(response):  
+        allowed_origins = ["https://icaeisdcovenantuniversity.org", "http://localhost:3000"]
         origin = request.headers.get("Origin", "")
+
+
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+        else:
+            response.headers["Access-Control-Allow-Origin"] = "*"
         
-        # Set specific allowed origin
-        response.headers["Access-Control-Allow-Origin"] = "https://icaeisdcovenantuniversity.org"
-        
-        # Allow credentials
         response.headers["Access-Control-Allow-Credentials"] = "true"
         
-        # Set allowed headers
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         
-        # Set allowed methods
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         
-        # Set max age for preflight requests cache
         response.headers["Access-Control-Max-Age"] = "3600"
         
         return response

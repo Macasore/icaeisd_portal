@@ -5,7 +5,7 @@ from flask_mail import Message
 from app import mail
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash
-from flask import render_template_string
+from flask import current_app, render_template_string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -25,16 +25,22 @@ def sendDetailsToEmail(username, password, useremail):
     mail.send(msg)
     return "Message Sent!"
     
-def sendEmail(subject, message, useremail):
+def sendEmail(subject,email_body, useremail, cc=None, attachment=None):
+    msg = Message(subject, recipients=[useremail], cc=cc)
+    msg.body = email_body
+    msg.html = email_body 
+
+    if attachment:
+        msg.attach(
+            filename="submission.pdf",
+            content_type="application/pdf",
+            data=attachment.read()  
+        )
     try:
-        sender = os.getenv('DefaultFromMail')
-        msg = Message(subject=subject, sender=sender, recipients=[useremail])
-        msg.body = message
         mail.send(msg)
-        return "Mail sent!", 200
     except Exception as e:
-        print(f"Error sending email: {e}")
-        return "An error occurred while sending the email. Please try again later.", 500
+        print(f"Error sending email: {str(e)}")
+        
 def sendCustomEmail(subject, email_body, useremail, firstname, title, cc=None):
     try:
       msg = Message(subject=subject, sender='support@icaeisdcovenantuniversity.org',cc=cc, recipients=[useremail])

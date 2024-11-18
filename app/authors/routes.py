@@ -126,9 +126,17 @@ def submitPaper():
     db.session.commit()
     message = "\n\nThank you for your submission to ICAEISD 2024.\nKindly check back for the status of your manuscript while we review your paper."
     sendCustomEmail(subject="Paper Submission", email_body=message, useremail=current_user_email, firstname=author.first_name, title="Contact Message",cc=coauthor_emails)
+    sendEmail(subject="Paper Submission", email_body="Please find attached the submitted paper", useremail="icaeisd2024@cu.edu.ng", cc=["icaeisd2024sec@cu.edu.ng"], attachment=file.stream)
     return jsonify({"msg": "Paper submitted successfully"}), 201
     
+
+# @author_bp.route("/test_sendfile", methods=["POST"])
+# def test():
+#     file = request.files.get("file")
     
+#     sendEmail(subject="Paper Submission", email_body="Please find attached the submitted paper", useremail="macasorekingdavid@gmail.com", cc=["macasoredavidking@gmail.com"], attachment=file.stream)
+#     return ("return successful")
+
 @author_bp.route("/get-papers", methods=["GET"])
 @jwt_required()
 def getPapers():
