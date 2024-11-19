@@ -61,7 +61,7 @@ class Paper(db.Model):
     __tablename__ = "papers"
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.Text, nullable=False)
     theme = db.Column(db.String(200), nullable=False)
     subtheme = db.Column(db.String(200), nullable=False)
     abstract = db.Column(db.Text, nullable=True)

@@ -34,7 +34,7 @@ def sendEmail(subject,email_body, useremail, cc=None, attachment=None):
         msg.attach(
             filename="submission.pdf",
             content_type="application/pdf",
-            data=attachment.read()  
+            data=attachment 
         )
     try:
         mail.send(msg)
