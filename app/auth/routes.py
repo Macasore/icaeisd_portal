@@ -236,15 +236,18 @@ def get_format():
     except ftplib.all_errors as e:
         return jsonify({"msg": f"FTP download failed: {str(e)}"}), 500
     
-@auth_bp.route('/download-local-test', methods=['GET'])
-def download_local_test():
-    file_path = 'C:\\Users\\maca\\Documents\\work\\icaeisd_portal\\app\\static\\conference template2.docx'  # Path to the sample file on your device
-    
-    if not os.path.exists(file_path):
-        return jsonify({"msg": "File not found"}), 404
-    
+@auth_bp.route('/download-program', methods=['GET'])
+def downloadProgram():
+    file_path = "/uploads/ICAEISD2024_Programme.pdf"
     try:
-        return send_file(file_path, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name='sample.docx')
+        with ftplib.FTP(current_app.config['FTP_HOST']) as ftp:
+            ftp.login(current_app.config['FTP_USER'], current_app.config['FTP_PASS'])
+            file_stream = BytesIO()
+            ftp.retrbinary(f'RETR {file_path}', file_stream.write)
+            file_stream.seek(0)
+              
+            file_name = file_path.split('/')[-1] 
+            return send_file(file_stream, mimetype='application/pdf', as_attachment=True, download_name=file_name)
     except Exception as e:
         return jsonify({"msg": f"Failed to send file: {str(e)}"}), 500       
     
