@@ -25,14 +25,14 @@ def sendDetailsToEmail(username, password, useremail):
     mail.send(msg)
     return "Message Sent!"
     
-def sendEmail(subject,email_body, useremail, cc=None, attachment=None):
+def sendEmail(subject, email_body, useremail, title_name, cc=None, attachment=None):
     msg = Message(subject, recipients=[useremail], cc=cc)
     msg.body = email_body
     msg.html = email_body 
 
     if attachment:
         msg.attach(
-            filename="submission.pdf",
+            filename=f"{title_name}.pdf",
             content_type="application/pdf",
             data=attachment 
         )

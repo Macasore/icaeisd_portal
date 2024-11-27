@@ -130,17 +130,18 @@ def submitPaper():
     full_name = f"{author.first_name} {author.last_name}"
     message = "\n\nThank you for your submission to ICAEISD 2024.\nKindly check back for the status of your manuscript while we review your paper."
     sendCustomEmail(subject="Paper Submission", email_body=message, useremail=current_user_email, firstname=author.first_name, title="Contact Message",cc=coauthor_emails)
-    sendEmail(subject="Paper Submission", email_body=f"Please find attached the submitted paper. Author's email: {a_email}. Author's name: {full_name}", useremail="icaeisd2024@cu.edu.ng", cc=["icaeisd2024sec@cu.edu.ng"], attachment=file.stream.read())
+    sendEmail(subject="Paper Submission", email_body=f"Please find attached the submitted paper. Author's email: {a_email}. Author's name: {full_name}", useremail="icaeisd2024@cu.edu.ng", title_name=title, cc=["icaeisd2024sec@cu.edu.ng"], attachment=file.stream.read())
     return jsonify({"msg": "Paper submitted successfully"}), 201
     
 
 # @author_bp.route("/test_sendfile", methods=["POST"])
 # def test():
+#     title = "A Review of Sustainable Risk Management and Application of the Markov Chain Model in Socio-Economic and Environmental Aspects of Projects"
 #     file = request.files.get("file")
 #     a_email = "macasorekingdavid@gmail.com"
 #     first_name = "david"
 #     file.stream.seek(0)
-#     sendEmail(subject="Paper Submission", email_body=f"Please find attached the submitted paper. Author's email: {a_email}. Author's name: {first_name}", useremail="macasorekingdavid@gmail.com", cc=["icaeisd2024sec@cu.edu.ng"], attachment=file.stream.read())
+#     sendEmail(subject="Paper Submission", email_body=f"Please find attached the submitted paper. Author's email: {a_email}. Author's name: {first_name}", useremail="macasorekingdavid@gmail.com",title_name=title, cc=["macasoredavidking@gmail.com"], attachment=file.stream.read())
 #     return ("return successful")
 
 @author_bp.route("/get-papers", methods=["GET"])
